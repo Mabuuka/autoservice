@@ -1,4 +1,4 @@
-module kursovaya/backend
+module autoservice/backend
 
 go 1.26.1
 

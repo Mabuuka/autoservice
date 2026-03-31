@@ -3,15 +3,15 @@ package router
 import (
 	"net/http"
 
-	"kursovaya/backend/internal/cars"
-	"kursovaya/backend/internal/config"
-	"kursovaya/backend/internal/employees"
-	"kursovaya/backend/internal/handlers"
-	"kursovaya/backend/internal/maintenanceparts"
-	"kursovaya/backend/internal/orders"
-	"kursovaya/backend/internal/owners"
-	"kursovaya/backend/internal/repairparts"
-	"kursovaya/backend/internal/services"
+	"autoservice/backend/internal/cars"
+	"autoservice/backend/internal/config"
+	"autoservice/backend/internal/employees"
+	"autoservice/backend/internal/handlers"
+	"autoservice/backend/internal/maintenanceparts"
+	"autoservice/backend/internal/orders"
+	"autoservice/backend/internal/owners"
+	"autoservice/backend/internal/repairparts"
+	"autoservice/backend/internal/services"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )

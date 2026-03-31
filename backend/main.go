@@ -4,9 +4,9 @@ import (
 	"log"
 	"net/http"
 
-	"kursovaya/backend/internal/config"
-	"kursovaya/backend/internal/database"
-	"kursovaya/backend/internal/router"
+	"autoservice/backend/internal/config"
+	"autoservice/backend/internal/database"
+	"autoservice/backend/internal/router"
 )
 
 func main() {
