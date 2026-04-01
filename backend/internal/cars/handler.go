@@ -2,10 +2,13 @@ package cars
 
 import (
 	"context"
-	"encoding/json"
+	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
+
+	"autoservice/backend/internal/api"
 )
 
 type Handler struct {
@@ -22,23 +25,18 @@ func (h *Handler) GetAll(w http.ResponseWriter, r *http.Request) {
 
 	cars, err := h.Repo.GetAll(ctx)
 	if err != nil {
-		http.Error(w, "failed to fetch cars", http.StatusInternalServerError)
+		api.Internal(w, "Failed to fetch cars.")
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-
-	if err := json.NewEncoder(w).Encode(cars); err != nil {
-		http.Error(w, "failed to encode response", http.StatusInternalServerError)
-		return
-	}
+	_ = api.WriteData(w, http.StatusOK, cars)
 }
 
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	var input CreateCarInput
 
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "invalid json body", http.StatusBadRequest)
+	if err := api.DecodeJSONBody(r, &input); err != nil {
+		api.WriteRequestError(w, err)
 		return
 	}
 
@@ -47,7 +45,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	input.Color = strings.TrimSpace(input.Color)
 
 	if input.OwnerID <= 0 || input.Brand == "" || input.PlateNumber == "" || input.ManufactureYear <= 0 || input.Color == "" {
-		http.Error(w, "owner_id, brand, plate_number, manufacture_year and color are required", http.StatusBadRequest)
+		api.BadRequest(w, "Fields owner_id, brand, plate_number, manufacture_year and color are required.")
 		return
 	}
 
@@ -56,15 +54,103 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 
 	car, err := h.Repo.Create(ctx, input)
 	if err != nil {
-		http.Error(w, "failed to create car", http.StatusInternalServerError)
+		switch {
+		case api.IsForeignKeyViolation(err):
+			api.Conflict(w, "Owner with the specified owner_id does not exist.")
+		case api.IsUniqueViolation(err):
+			api.Conflict(w, "Car with the same plate_number already exists.")
+		case api.IsCheckViolation(err):
+			api.BadRequest(w, "manufacture_year is outside the allowed range.")
+		default:
+			api.Internal(w, "Failed to create car.")
+		}
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(http.StatusCreated)
+	_ = api.WriteCreated(w, "Car created successfully.", car)
+}
 
-	if err := json.NewEncoder(w).Encode(car); err != nil {
-		http.Error(w, "failed to encode response", http.StatusInternalServerError)
+func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
+	carID, err := parseCarID(r)
+	if err != nil {
+		api.BadRequest(w, err.Error())
 		return
 	}
+
+	var input UpdateCarInput
+
+	if err := api.DecodeJSONBody(r, &input); err != nil {
+		api.WriteRequestError(w, err)
+		return
+	}
+
+	input.Brand = strings.TrimSpace(input.Brand)
+	input.PlateNumber = strings.TrimSpace(input.PlateNumber)
+	input.Color = strings.TrimSpace(input.Color)
+
+	if input.OwnerID <= 0 || input.Brand == "" || input.PlateNumber == "" || input.ManufactureYear <= 0 || input.Color == "" {
+		api.BadRequest(w, "Fields owner_id, brand, plate_number, manufacture_year and color are required.")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+	defer cancel()
+
+	car, err := h.Repo.Update(ctx, carID, input)
+	if err != nil {
+		switch {
+		case errors.Is(err, ErrCarNotFound):
+			api.NotFound(w, "Car not found.")
+		case api.IsForeignKeyViolation(err):
+			api.Conflict(w, "Owner with the specified owner_id does not exist.")
+		case api.IsUniqueViolation(err):
+			api.Conflict(w, "Car with the same plate_number already exists.")
+		case api.IsCheckViolation(err):
+			api.BadRequest(w, "manufacture_year is outside the allowed range.")
+		default:
+			api.Internal(w, "Failed to update car.")
+		}
+		return
+	}
+
+	_ = api.WriteUpdated(w, "Car updated successfully.", car)
+}
+
+func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
+	carID, err := parseCarID(r)
+	if err != nil {
+		api.BadRequest(w, err.Error())
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+	defer cancel()
+
+	if err := h.Repo.Delete(ctx, carID); err != nil {
+		switch {
+		case errors.Is(err, ErrCarNotFound):
+			api.NotFound(w, "Car not found.")
+		case api.IsForeignKeyViolation(err):
+			api.Conflict(w, "Cannot delete car because it is linked to existing orders.")
+		default:
+			api.Internal(w, "Failed to delete car.")
+		}
+		return
+	}
+
+	_ = api.WriteDeleted(w, "Car deleted successfully.", carID)
+}
+
+func parseCarID(r *http.Request) (int64, error) {
+	carIDStr := strings.TrimSpace(r.PathValue("id"))
+	if carIDStr == "" {
+		return 0, errors.New("car id is required")
+	}
+
+	carID, err := strconv.ParseInt(carIDStr, 10, 64)
+	if err != nil || carID <= 0 {
+		return 0, errors.New("car id must be a positive integer")
+	}
+
+	return carID, nil
 }

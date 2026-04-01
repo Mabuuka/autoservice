@@ -14,3 +14,10 @@ type CreateOwnerInput struct {
 	DriverLicense string `json:"driver_license"`
 	IsRegular     bool   `json:"is_regular"`
 }
+
+type UpdateOwnerInput struct {
+	FullName      string `json:"full_name"`
+	Phone         string `json:"phone"`
+	DriverLicense string `json:"driver_license"`
+	IsRegular     bool   `json:"is_regular"`
+}

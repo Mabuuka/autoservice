@@ -17,3 +17,11 @@ type CreateCarInput struct {
 	ManufactureYear int    `json:"manufacture_year"`
 	Color           string `json:"color"`
 }
+
+type UpdateCarInput struct {
+	OwnerID         int64  `json:"owner_id"`
+	Brand           string `json:"brand"`
+	PlateNumber     string `json:"plate_number"`
+	ManufactureYear int    `json:"manufacture_year"`
+	Color           string `json:"color"`
+}

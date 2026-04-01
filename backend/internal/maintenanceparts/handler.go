@@ -2,10 +2,11 @@ package maintenanceparts
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"strings"
 	"time"
+
+	"autoservice/backend/internal/api"
 )
 
 type Handler struct {
@@ -22,23 +23,18 @@ func (h *Handler) GetAll(w http.ResponseWriter, r *http.Request) {
 
 	parts, err := h.Repo.GetAll(ctx)
 	if err != nil {
-		http.Error(w, "failed to fetch maintenance parts", http.StatusInternalServerError)
+		api.Internal(w, "Failed to fetch maintenance parts.")
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-
-	if err := json.NewEncoder(w).Encode(parts); err != nil {
-		http.Error(w, "failed to encode response", http.StatusInternalServerError)
-		return
-	}
+	_ = api.WriteData(w, http.StatusOK, parts)
 }
 
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	var input CreateMaintenancePartInput
 
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "invalid json body", http.StatusBadRequest)
+	if err := api.DecodeJSONBody(r, &input); err != nil {
+		api.WriteRequestError(w, err)
 		return
 	}
 
@@ -46,13 +42,13 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	input.DeliveryDate = strings.TrimSpace(input.DeliveryDate)
 
 	if input.Name == "" || input.Quantity < 0 {
-		http.Error(w, "name is required and quantity must be 0 or greater", http.StatusBadRequest)
+		api.BadRequest(w, "Field name is required and quantity must be 0 or greater.")
 		return
 	}
 
 	if input.DeliveryDate != "" {
 		if _, err := time.Parse("2006-01-02", input.DeliveryDate); err != nil {
-			http.Error(w, "delivery_date must be in YYYY-MM-DD format", http.StatusBadRequest)
+			api.BadRequest(w, "delivery_date must be in YYYY-MM-DD format.")
 			return
 		}
 	}
@@ -62,15 +58,16 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 
 	part, err := h.Repo.Create(ctx, input)
 	if err != nil {
-		http.Error(w, "failed to create maintenance part", http.StatusInternalServerError)
+		switch {
+		case api.IsUniqueViolation(err):
+			api.Conflict(w, "Maintenance part with the same name already exists.")
+		case api.IsCheckViolation(err):
+			api.BadRequest(w, "Quantity must be 0 or greater.")
+		default:
+			api.Internal(w, "Failed to create maintenance part.")
+		}
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(http.StatusCreated)
-
-	if err := json.NewEncoder(w).Encode(part); err != nil {
-		http.Error(w, "failed to encode response", http.StatusInternalServerError)
-		return
-	}
+	_ = api.WriteCreated(w, "Maintenance part created successfully.", part)
 }

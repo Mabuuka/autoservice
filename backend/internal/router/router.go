@@ -3,6 +3,7 @@ package router
 import (
 	"net/http"
 
+	"autoservice/backend/internal/api"
 	"autoservice/backend/internal/cars"
 	"autoservice/backend/internal/config"
 	"autoservice/backend/internal/employees"
@@ -56,8 +57,18 @@ func New(cfg config.Config, db *pgxpool.Pool) *http.ServeMux {
 		case http.MethodPost:
 			ownersHandler.Create(w, r)
 		default:
-			w.Header().Set("Allow", "GET, POST")
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			api.MethodNotAllowed(w, "GET, POST")
+		}
+	})
+
+	mux.HandleFunc("/api/owners/{id}", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPut:
+			ownersHandler.Update(w, r)
+		case http.MethodDelete:
+			ownersHandler.Delete(w, r)
+		default:
+			api.MethodNotAllowed(w, "PUT, DELETE")
 		}
 	})
 
@@ -68,8 +79,18 @@ func New(cfg config.Config, db *pgxpool.Pool) *http.ServeMux {
 		case http.MethodPost:
 			carsHandler.Create(w, r)
 		default:
-			w.Header().Set("Allow", "GET, POST")
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			api.MethodNotAllowed(w, "GET, POST")
+		}
+	})
+
+	mux.HandleFunc("/api/cars/{id}", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPut:
+			carsHandler.Update(w, r)
+		case http.MethodDelete:
+			carsHandler.Delete(w, r)
+		default:
+			api.MethodNotAllowed(w, "PUT, DELETE")
 		}
 	})
 
@@ -80,8 +101,18 @@ func New(cfg config.Config, db *pgxpool.Pool) *http.ServeMux {
 		case http.MethodPost:
 			servicesHandler.Create(w, r)
 		default:
-			w.Header().Set("Allow", "GET, POST")
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			api.MethodNotAllowed(w, "GET, POST")
+		}
+	})
+
+	mux.HandleFunc("/api/services/{id}", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPut:
+			servicesHandler.Update(w, r)
+		case http.MethodDelete:
+			servicesHandler.Delete(w, r)
+		default:
+			api.MethodNotAllowed(w, "PUT, DELETE")
 		}
 	})
 
@@ -92,8 +123,18 @@ func New(cfg config.Config, db *pgxpool.Pool) *http.ServeMux {
 		case http.MethodPost:
 			employeesHandler.Create(w, r)
 		default:
-			w.Header().Set("Allow", "GET, POST")
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			api.MethodNotAllowed(w, "GET, POST")
+		}
+	})
+
+	mux.HandleFunc("/api/employees/{id}", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPut:
+			employeesHandler.Update(w, r)
+		case http.MethodDelete:
+			employeesHandler.Delete(w, r)
+		default:
+			api.MethodNotAllowed(w, "PUT, DELETE")
 		}
 	})
 
@@ -104,8 +145,7 @@ func New(cfg config.Config, db *pgxpool.Pool) *http.ServeMux {
 		case http.MethodPost:
 			repairPartsHandler.Create(w, r)
 		default:
-			w.Header().Set("Allow", "GET, POST")
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			api.MethodNotAllowed(w, "GET, POST")
 		}
 	})
 
@@ -116,8 +156,7 @@ func New(cfg config.Config, db *pgxpool.Pool) *http.ServeMux {
 		case http.MethodPost:
 			maintenancePartsHandler.Create(w, r)
 		default:
-			w.Header().Set("Allow", "GET, POST")
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			api.MethodNotAllowed(w, "GET, POST")
 		}
 	})
 
@@ -128,8 +167,16 @@ func New(cfg config.Config, db *pgxpool.Pool) *http.ServeMux {
 		case http.MethodPost:
 			ordersHandler.Create(w, r)
 		default:
-			w.Header().Set("Allow", "GET, POST")
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			api.MethodNotAllowed(w, "GET, POST")
+		}
+	})
+
+	mux.HandleFunc("/api/orders/form-data", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			ordersHandler.GetFormData(w, r)
+		default:
+			api.MethodNotAllowed(w, "GET")
 		}
 	})
 
@@ -138,8 +185,47 @@ func New(cfg config.Config, db *pgxpool.Pool) *http.ServeMux {
 		case http.MethodGet:
 			ordersHandler.GetDetails(w, r)
 		default:
-			w.Header().Set("Allow", "GET")
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			api.MethodNotAllowed(w, "GET")
+		}
+	})
+
+	mux.HandleFunc("/api/orders/{id}", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			ordersHandler.GetByID(w, r)
+		case http.MethodPut:
+			ordersHandler.Update(w, r)
+		case http.MethodDelete:
+			ordersHandler.Delete(w, r)
+		default:
+			api.MethodNotAllowed(w, "GET, PUT, DELETE")
+		}
+	})
+
+	mux.HandleFunc("/api/orders/{id}/employees", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPut:
+			ordersHandler.ReplaceEmployees(w, r)
+		default:
+			api.MethodNotAllowed(w, "PUT")
+		}
+	})
+
+	mux.HandleFunc("/api/orders/{id}/repair-parts", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPut:
+			ordersHandler.ReplaceRepairParts(w, r)
+		default:
+			api.MethodNotAllowed(w, "PUT")
+		}
+	})
+
+	mux.HandleFunc("/api/orders/{id}/maintenance-parts", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPut:
+			ordersHandler.ReplaceMaintenanceParts(w, r)
+		default:
+			api.MethodNotAllowed(w, "PUT")
 		}
 	})
 
@@ -148,8 +234,7 @@ func New(cfg config.Config, db *pgxpool.Pool) *http.ServeMux {
 		case http.MethodPost:
 			ordersHandler.AssignEmployees(w, r)
 		default:
-			w.Header().Set("Allow", "POST")
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			api.MethodNotAllowed(w, "POST")
 		}
 	})
 
@@ -158,8 +243,7 @@ func New(cfg config.Config, db *pgxpool.Pool) *http.ServeMux {
 		case http.MethodPost:
 			ordersHandler.AddRepairParts(w, r)
 		default:
-			w.Header().Set("Allow", "POST")
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			api.MethodNotAllowed(w, "POST")
 		}
 	})
 
@@ -168,8 +252,7 @@ func New(cfg config.Config, db *pgxpool.Pool) *http.ServeMux {
 		case http.MethodPost:
 			ordersHandler.AddMaintenanceParts(w, r)
 		default:
-			w.Header().Set("Allow", "POST")
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			api.MethodNotAllowed(w, "POST")
 		}
 	})
 

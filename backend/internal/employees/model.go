@@ -14,3 +14,10 @@ type CreateEmployeeInput struct {
 	Phone           string `json:"phone"`
 	FullName        string `json:"full_name"`
 }
+
+type UpdateEmployeeInput struct {
+	PersonnelNumber int    `json:"personnel_number"`
+	Specialty       string `json:"specialty"`
+	Phone           string `json:"phone"`
+	FullName        string `json:"full_name"`
+}

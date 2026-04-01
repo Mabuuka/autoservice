@@ -2,9 +2,13 @@ package employees
 
 import (
 	"context"
+	"errors"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+var ErrEmployeeNotFound = errors.New("employee not found")
 
 type Repository struct {
 	DB *pgxpool.Pool
@@ -81,4 +85,62 @@ func (r *Repository) Create(ctx context.Context, input CreateEmployeeInput) (Emp
 	}
 
 	return employee, nil
+}
+
+func (r *Repository) Update(ctx context.Context, employeeID int64, input UpdateEmployeeInput) (Employee, error) {
+	query := `
+		UPDATE automaster.employees
+		SET
+			personnel_number = $2,
+			specialty = $3,
+			phone = $4,
+			full_name = $5
+		WHERE employee_id = $1
+		RETURNING employee_id, COALESCE(personnel_number, 0)::int, specialty, phone, full_name
+	`
+
+	var employee Employee
+
+	err := r.DB.QueryRow(
+		ctx,
+		query,
+		employeeID,
+		input.PersonnelNumber,
+		input.Specialty,
+		input.Phone,
+		input.FullName,
+	).Scan(
+		&employee.EmployeeID,
+		&employee.PersonnelNumber,
+		&employee.Specialty,
+		&employee.Phone,
+		&employee.FullName,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return Employee{}, ErrEmployeeNotFound
+		}
+
+		return Employee{}, err
+	}
+
+	return employee, nil
+}
+
+func (r *Repository) Delete(ctx context.Context, employeeID int64) error {
+	query := `
+		DELETE FROM automaster.employees
+		WHERE employee_id = $1
+	`
+
+	result, err := r.DB.Exec(ctx, query, employeeID)
+	if err != nil {
+		return err
+	}
+
+	if result.RowsAffected() == 0 {
+		return ErrEmployeeNotFound
+	}
+
+	return nil
 }

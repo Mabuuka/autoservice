@@ -15,3 +15,10 @@ type CreateServiceInput struct {
 	PriceRub               float64 `json:"price_rub"`
 	RegularDiscountPercent float64 `json:"regular_discount_percent"`
 }
+
+type UpdateServiceInput struct {
+	Name                   string  `json:"name"`
+	Description            string  `json:"description"`
+	PriceRub               float64 `json:"price_rub"`
+	RegularDiscountPercent float64 `json:"regular_discount_percent"`
+}

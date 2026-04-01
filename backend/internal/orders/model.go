@@ -54,8 +54,18 @@ type CreateOrderInput struct {
 	ReadyDate string `json:"ready_date"`
 }
 
+type UpdateOrderInput struct {
+	CarID     int64  `json:"car_id"`
+	ServiceID int64  `json:"service_id"`
+	ReadyDate string `json:"ready_date"`
+}
+
 type AssignEmployeesInput struct {
 	OrderNumber int64   `json:"order_number"`
+	EmployeeIDs []int64 `json:"employee_ids"`
+}
+
+type ReplaceEmployeesInput struct {
 	EmployeeIDs []int64 `json:"employee_ids"`
 }
 
@@ -74,7 +84,57 @@ type AddRepairPartsInput struct {
 	Items       []RepairPartItemInput `json:"items"`
 }
 
+type ReplaceRepairPartsInput struct {
+	Items []RepairPartItemInput `json:"items"`
+}
+
 type AddMaintenancePartsInput struct {
 	OrderNumber int64                      `json:"order_number"`
 	Items       []MaintenancePartItemInput `json:"items"`
+}
+
+type ReplaceMaintenancePartsInput struct {
+	Items []MaintenancePartItemInput `json:"items"`
+}
+
+type OrderFormCarOption struct {
+	CarID         int64  `json:"car_id"`
+	PlateNumber   string `json:"plate_number"`
+	Brand         string `json:"brand"`
+	OwnerFullName string `json:"owner_full_name"`
+	Label         string `json:"label"`
+}
+
+type OrderFormServiceOption struct {
+	ServiceID              int64   `json:"service_id"`
+	Name                   string  `json:"name"`
+	PriceRub               float64 `json:"price_rub"`
+	RegularDiscountPercent float64 `json:"regular_discount_percent"`
+	DiscountedPriceRub     float64 `json:"discounted_price_rub"`
+}
+
+type OrderFormEmployeeOption struct {
+	EmployeeID int64  `json:"employee_id"`
+	FullName   string `json:"full_name"`
+	Specialty  string `json:"specialty"`
+}
+
+type OrderFormRepairPartOption struct {
+	RepairPartID int64  `json:"repair_part_id"`
+	Name         string `json:"name"`
+	Quantity     int    `json:"quantity"`
+}
+
+type OrderFormMaintenancePartOption struct {
+	MaintenancePartID int64  `json:"maintenance_part_id"`
+	Name              string `json:"name"`
+	Quantity          int    `json:"quantity"`
+}
+
+type OrderFormData struct {
+	Cars             []OrderFormCarOption             `json:"cars"`
+	Services         []OrderFormServiceOption         `json:"services"`
+	Employees        []OrderFormEmployeeOption        `json:"employees"`
+	RepairParts      []OrderFormRepairPartOption      `json:"repair_parts"`
+	MaintenanceParts []OrderFormMaintenancePartOption `json:"maintenance_parts"`
 }
