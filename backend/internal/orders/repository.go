@@ -2,6 +2,7 @@ package orders
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 
 	"github.com/jackc/pgx/v5"
@@ -21,15 +22,19 @@ func NewRepository(db *pgxpool.Pool) *Repository {
 func (r *Repository) GetAll(ctx context.Context) ([]OrderView, error) {
 	query := `
 		SELECT
-			order_number,
-			car_plate_number,
-			owner_full_name,
-			owner_phone,
-			service_name,
-			TO_CHAR(ready_date, 'YYYY-MM-DD') AS ready_date,
-			COALESCE(employees, '') AS employees
-		FROM automaster.v_workshop_orders
-		ORDER BY order_number
+			v.order_number,
+			v.car_plate_number,
+			v.owner_full_name,
+			v.owner_phone,
+			v.service_name,
+			TO_CHAR(v.ready_date, 'YYYY-MM-DD') AS ready_date,
+			e.employee_id,
+			e.full_name,
+			e.specialty
+		FROM automaster.v_workshop_orders v
+		LEFT JOIN automaster.order_employees oe ON oe.order_number = v.order_number
+		LEFT JOIN automaster.employees e ON e.employee_id = oe.employee_id
+		ORDER BY v.order_number
 	`
 
 	rows, err := r.DB.Query(ctx, query)
@@ -42,6 +47,9 @@ func (r *Repository) GetAll(ctx context.Context) ([]OrderView, error) {
 
 	for rows.Next() {
 		var order OrderView
+		var employeeID sql.NullInt64
+		var employeeFullName sql.NullString
+		var employeeSpecialty sql.NullString
 
 		err := rows.Scan(
 			&order.OrderNumber,
@@ -50,10 +58,21 @@ func (r *Repository) GetAll(ctx context.Context) ([]OrderView, error) {
 			&order.OwnerPhone,
 			&order.ServiceName,
 			&order.ReadyDate,
-			&order.Employees,
+			&employeeID,
+			&employeeFullName,
+			&employeeSpecialty,
 		)
 		if err != nil {
 			return nil, err
+		}
+
+		order.Employees = make([]OrderEmployee, 0)
+		if employeeID.Valid {
+			order.Employees = append(order.Employees, OrderEmployee{
+				EmployeeID: employeeID.Int64,
+				FullName:   employeeFullName.String,
+				Specialty:  employeeSpecialty.String,
+			})
 		}
 
 		orders = append(orders, order)
@@ -160,22 +179,23 @@ func (r *Repository) Delete(ctx context.Context, orderNumber int64) error {
 	return nil
 }
 
-func (r *Repository) AssignEmployees(ctx context.Context, input AssignEmployeesInput) error {
-	if len(input.EmployeeIDs) == 0 {
-		return errors.New("employee_ids are required")
-	}
-
+func (r *Repository) AssignEmployees(ctx context.Context, orderNumber int64, employeeID int64) error {
 	query := `
 		INSERT INTO automaster.order_employees (order_number, employee_id)
-		SELECT $1, UNNEST($2::bigint[])
-		ON CONFLICT (order_number, employee_id) DO NOTHING
+		VALUES ($1, $2)
+		ON CONFLICT (order_number)
+		DO UPDATE SET employee_id = EXCLUDED.employee_id
 	`
 
-	_, err := r.DB.Exec(ctx, query, input.OrderNumber, input.EmployeeIDs)
+	_, err := r.DB.Exec(ctx, query, orderNumber, employeeID)
 	return err
 }
 
 func (r *Repository) ReplaceEmployees(ctx context.Context, orderNumber int64, employeeIDs []int64) error {
+	if len(employeeIDs) > 1 {
+		return errors.New("only one employee can be assigned to an order")
+	}
+
 	tx, err := r.DB.Begin(ctx)
 	if err != nil {
 		return err
@@ -195,13 +215,13 @@ func (r *Repository) ReplaceEmployees(ctx context.Context, orderNumber int64, em
 		return err
 	}
 
-	if len(employeeIDs) > 0 {
+	if len(employeeIDs) == 1 {
 		insertQuery := `
 			INSERT INTO automaster.order_employees (order_number, employee_id)
-			SELECT $1, UNNEST($2::bigint[])
+			VALUES ($1, $2)
 		`
 
-		if _, err := tx.Exec(ctx, insertQuery, orderNumber, employeeIDs); err != nil {
+		if _, err := tx.Exec(ctx, insertQuery, orderNumber, employeeIDs[0]); err != nil {
 			return err
 		}
 	}

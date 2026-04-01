@@ -7,6 +7,7 @@ TRUNCATE TABLE
     order_repair_parts,
     order_employees,
     orders,
+    users,
     employee_salaries,
     maintenance_parts,
     repair_parts,
@@ -46,6 +47,63 @@ INSERT INTO employees (personnel_number, specialty, phone, full_name) VALUES
     (103, 'Мастер-приемщик', '+7-901-300-30-30', 'Олег Васильев'),
     (104, 'Слесарь по ТО', '+7-901-400-40-40', 'Ирина Орлова');
 
+-- Аккаунты пользователей
+-- Пароли:
+-- ilya@example.com            -> demo12345
+-- anna@example.com            -> client12345
+-- alexey.master@example.com   -> master12345
+-- marina.master@example.com   -> diagnost12345
+INSERT INTO users (
+    role,
+    owner_id,
+    employee_id,
+    email,
+    password_hash,
+    full_name,
+    phone,
+    preferred_entrypoint
+) VALUES
+    (
+        'client',
+        1,
+        NULL,
+        'ilya@example.com',
+        '$2a$10$/ciPYCQsdrMiR15PhX0Jzem.nk51jSGP1Bpx4Rsh3Rx1JB5r6TmK.',
+        'Илья Соколов',
+        '+7-950-111-22-33',
+        'orders'
+    ),
+    (
+        'client',
+        2,
+        NULL,
+        'anna@example.com',
+        '$2a$10$smHVnuvL45RhqDMb/lxl6.6QWfATOUFfdh6Egx2Q8gL/g8yPCL2Fm',
+        'Анна Морозова',
+        '+7-950-222-33-44',
+        'cars'
+    ),
+    (
+        'master',
+        NULL,
+        1,
+        'alexey.master@example.com',
+        '$2a$10$gPzBwyDlKy8pQLK1aftMX.Ncszg6HGxvVcf45U1fgr3e7g1H1tqmG',
+        'Алексей Петров',
+        '+7-951-100-10-10',
+        'orders'
+    ),
+    (
+        'master',
+        NULL,
+        2,
+        'marina.master@example.com',
+        '$2a$10$PM6gFCcE47KWsmjvhcEcUeUEyD.oaf64979gSR.hRADFXV8FdtM7u',
+        'Марина Смирнова',
+        '+7-951-200-20-20',
+        'orders'
+    );
+
 -- Зарплата сотрудников
 INSERT INTO employee_salaries (employee_id, participation_coeff, full_shift_salary_rub) VALUES
     (1, 1.10, 4500.00),
@@ -75,17 +133,13 @@ INSERT INTO orders (car_id, service_id, ready_date) VALUES
     (5, 4, '2026-04-09'),
     (4, 5, '2026-04-12');
 
--- Сотрудники в заказах
+-- Один заказ -> один мастер
 INSERT INTO order_employees (order_number, employee_id) VALUES
     (1, 2),
-    (1, 3),
     (2, 1),
-    (2, 4),
     (3, 1),
-    (3, 3),
     (4, 2),
-    (5, 1),
-    (5, 2);
+    (5, 1);
 
 -- Детали для ремонта в заказах
 INSERT INTO order_repair_parts (order_number, repair_part_id, quantity_used) VALUES

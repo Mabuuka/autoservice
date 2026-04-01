@@ -174,28 +174,26 @@ func (h *Handler) AssignEmployees(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if input.OrderNumber <= 0 || len(input.EmployeeIDs) == 0 {
-		api.BadRequest(w, "Fields order_number and employee_ids are required.")
+	if input.OrderNumber <= 0 {
+		api.BadRequest(w, "Field order_number is required.")
 		return
 	}
 
-	normalizedEmployeeIDs, err := normalizeEmployeeIDs(input.EmployeeIDs)
+	normalizedEmployeeIDs, err := resolveEmployeeAssignment(input.EmployeeID, input.EmployeeIDs, false)
 	if err != nil {
 		api.BadRequest(w, err.Error())
 		return
 	}
 
-	input.EmployeeIDs = normalizedEmployeeIDs
-
 	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
 	defer cancel()
 
-	if err := h.Repo.AssignEmployees(ctx, input); err != nil {
+	if err := h.Repo.AssignEmployees(ctx, input.OrderNumber, normalizedEmployeeIDs[0]); err != nil {
 		switch {
 		case api.IsForeignKeyViolation(err):
 			api.Conflict(w, "Order or employee with the specified id does not exist.")
 		default:
-			api.Internal(w, "Failed to assign employees to order.")
+			api.Internal(w, "Failed to assign employee to order.")
 		}
 		return
 	}
@@ -210,7 +208,7 @@ func (h *Handler) AssignEmployees(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = api.WriteUpdated(w, "Employees assigned successfully.", details)
+	_ = api.WriteUpdated(w, "Order master assigned successfully.", details)
 }
 
 func (h *Handler) ReplaceEmployees(w http.ResponseWriter, r *http.Request) {
@@ -226,7 +224,7 @@ func (h *Handler) ReplaceEmployees(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	input.EmployeeIDs, err = normalizeEmployeeIDs(input.EmployeeIDs)
+	normalizedEmployeeIDs, err := resolveEmployeeAssignment(input.EmployeeID, input.EmployeeIDs, true)
 	if err != nil {
 		api.BadRequest(w, err.Error())
 		return
@@ -235,14 +233,14 @@ func (h *Handler) ReplaceEmployees(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
 	defer cancel()
 
-	if err := h.Repo.ReplaceEmployees(ctx, orderNumber, input.EmployeeIDs); err != nil {
+	if err := h.Repo.ReplaceEmployees(ctx, orderNumber, normalizedEmployeeIDs); err != nil {
 		switch {
 		case errors.Is(err, ErrOrderNotFound):
 			api.NotFound(w, "Order not found.")
 		case api.IsForeignKeyViolation(err):
-			api.Conflict(w, "One or more employees with the specified ids do not exist.")
+			api.Conflict(w, "Employee with the specified id does not exist.")
 		default:
-			api.Internal(w, "Failed to replace order employees.")
+			api.Internal(w, "Failed to update order master.")
 		}
 		return
 	}
@@ -257,7 +255,12 @@ func (h *Handler) ReplaceEmployees(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = api.WriteUpdated(w, "Order employees updated successfully.", details)
+	message := "Order master updated successfully."
+	if len(normalizedEmployeeIDs) == 0 {
+		message = "Order master cleared successfully."
+	}
+
+	_ = api.WriteUpdated(w, message, details)
 }
 
 func (h *Handler) AddRepairParts(w http.ResponseWriter, r *http.Request) {
@@ -522,7 +525,7 @@ func normalizeEmployeeIDs(employeeIDs []int64) ([]int64, error) {
 
 	for _, employeeID := range employeeIDs {
 		if employeeID <= 0 {
-			return nil, errors.New("employee_ids must contain only positive integers")
+			return nil, errors.New("employee_id must be a positive integer")
 		}
 		if _, exists := unique[employeeID]; exists {
 			continue
@@ -535,7 +538,34 @@ func normalizeEmployeeIDs(employeeIDs []int64) ([]int64, error) {
 		return result[i] < result[j]
 	})
 
+	if len(result) > 1 {
+		return nil, errors.New("only one employee can be assigned to an order")
+	}
+
 	return result, nil
+}
+
+func resolveEmployeeAssignment(employeeID *int64, employeeIDs []int64, allowEmpty bool) ([]int64, error) {
+	normalizedEmployeeIDs, err := normalizeEmployeeIDs(employeeIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	if employeeID != nil {
+		if *employeeID <= 0 {
+			return nil, errors.New("employee_id must be a positive integer")
+		}
+		if len(normalizedEmployeeIDs) > 0 && normalizedEmployeeIDs[0] != *employeeID {
+			return nil, errors.New("use either employee_id or employee_ids with the same single value")
+		}
+		return []int64{*employeeID}, nil
+	}
+
+	if !allowEmpty && len(normalizedEmployeeIDs) == 0 {
+		return nil, errors.New("employee_id is required")
+	}
+
+	return normalizedEmployeeIDs, nil
 }
 
 func normalizeRepairPartItems(items []RepairPartItemInput) ([]RepairPartItemInput, error) {

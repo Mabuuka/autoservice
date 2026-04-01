@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"autoservice/backend/internal/api"
+	"autoservice/backend/internal/auth"
 	"autoservice/backend/internal/cars"
 	"autoservice/backend/internal/config"
 	"autoservice/backend/internal/employees"
@@ -13,6 +14,7 @@ import (
 	"autoservice/backend/internal/owners"
 	"autoservice/backend/internal/repairparts"
 	"autoservice/backend/internal/services"
+	"autoservice/backend/internal/users"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -22,6 +24,7 @@ func New(cfg config.Config, db *pgxpool.Pool) *http.ServeMux {
 
 	homeHandler := handlers.NewHomeHandler(cfg.TemplatesDir)
 	healthHandler := handlers.NewHealthHandler(db)
+	sessionManager := auth.NewSessionManager(cfg)
 
 	ownersRepo := owners.NewRepository(db)
 	ownersHandler := owners.NewHandler(ownersRepo)
@@ -44,11 +47,52 @@ func New(cfg config.Config, db *pgxpool.Pool) *http.ServeMux {
 	ordersRepo := orders.NewRepository(db)
 	ordersHandler := orders.NewHandler(ordersRepo)
 
+	usersRepo := users.NewRepository(db)
+	usersHandler := users.NewHandler(usersRepo, sessionManager)
+
 	staticFS := http.FileServer(http.Dir(cfg.StaticDir))
 	mux.Handle("/static/", http.StripPrefix("/static/", staticFS))
 
 	mux.HandleFunc("/", homeHandler.Index)
 	mux.HandleFunc("/api/health", healthHandler.Check)
+
+	mux.HandleFunc("/api/auth/register", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost:
+			usersHandler.Register(w, r)
+		default:
+			api.MethodNotAllowed(w, "POST")
+		}
+	})
+
+	mux.HandleFunc("/api/auth/login", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost:
+			usersHandler.Login(w, r)
+		default:
+			api.MethodNotAllowed(w, "POST")
+		}
+	})
+
+	mux.HandleFunc("/api/auth/logout", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost:
+			usersHandler.Logout(w, r)
+		default:
+			api.MethodNotAllowed(w, "POST")
+		}
+	})
+
+	mux.HandleFunc("/api/profile/me", sessionManager.RequireAuth(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			usersHandler.GetCurrentProfile(w, r)
+		case http.MethodPut:
+			usersHandler.UpdateCurrentProfile(w, r)
+		default:
+			api.MethodNotAllowed(w, "GET, PUT")
+		}
+	}))
 
 	mux.HandleFunc("/api/owners", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {

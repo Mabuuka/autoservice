@@ -60,7 +60,41 @@ create table employees (
 );
 
 -- =========================
--- 5. Зарплата сотрудников
+-- 5. Пользователи / аккаунты
+-- Отдельная auth-сущность.
+-- client -> owner
+-- master -> employee
+-- =========================
+create table users (
+    user_id bigint generated always as identity primary key,
+    role varchar(20) not null
+        check (role in ('client', 'master')),
+    owner_id bigint unique references owners(owner_id)
+        on update cascade
+        on delete set null,
+    employee_id bigint unique references employees(employee_id)
+        on update cascade
+        on delete set null,
+    email varchar(255) not null unique,
+    password_hash text not null,
+    full_name varchar(200) not null,
+    phone varchar(20) unique,
+    preferred_entrypoint varchar(30) not null default 'profile'
+        check (preferred_entrypoint in ('profile', 'cars', 'orders')),
+    created_at timestamp without time zone not null default current_timestamp,
+    updated_at timestamp without time zone not null default current_timestamp,
+    last_login_at timestamp without time zone,
+    constraint chk_users_role_link check (
+        (role = 'client' and owner_id is not null and employee_id is null)
+        or
+        (role = 'master' and employee_id is not null and owner_id is null)
+    )
+);
+
+create index idx_users_role on users(role);
+
+-- =========================
+-- 6. Зарплата сотрудников
 -- 1:1 с сотрудником
 -- =========================
 create table employee_salaries (
@@ -78,7 +112,7 @@ create table employee_salaries (
 );
 
 -- =========================
--- 6. Детали для ремонта
+-- 7. Детали для ремонта
 -- =========================
 create table repair_parts (
     repair_part_id bigint generated always as identity primary key,
@@ -88,7 +122,7 @@ create table repair_parts (
 );
 
 -- =========================
--- 7. Детали для ТО
+-- 8. Детали для ТО
 -- =========================
 create table maintenance_parts (
     maintenance_part_id bigint generated always as identity primary key,
@@ -98,7 +132,7 @@ create table maintenance_parts (
 );
 
 -- =========================
--- 8. Заказы автомастерской
+-- 9. Заказы автомастерской
 -- =========================
 create table orders (
     order_number bigint generated always as identity primary key,
@@ -116,22 +150,24 @@ create index idx_orders_car_id on orders(car_id);
 create index idx_orders_service_id on orders(service_id);
 
 -- =========================
--- 9. Связь заказов и сотрудников
+-- 10. Назначенный мастер в заказе
+-- Оставляем имя таблицы order_employees,
+-- чтобы не ломать существующие запросы backend.
+-- Но теперь это связь 1 заказ -> 1 мастер.
 -- =========================
 create table order_employees (
-    order_number bigint not null references orders(order_number)
+    order_number bigint primary key references orders(order_number)
         on update cascade
         on delete cascade,
     employee_id bigint not null references employees(employee_id)
         on update cascade
-        on delete restrict,
-    primary key (order_number, employee_id)
+        on delete restrict
 );
 
 create index idx_order_employees_employee_id on order_employees(employee_id);
 
 -- =========================
--- 10. Детали для ремонта в заказе
+-- 11. Детали для ремонта в заказе
 -- =========================
 create table order_repair_parts (
     order_number bigint not null references orders(order_number)
@@ -148,7 +184,7 @@ create index idx_order_repair_parts_part_id
     on order_repair_parts(repair_part_id);
 
 -- =========================
--- 11. Детали ТО в заказе
+-- 12. Детали ТО в заказе
 -- =========================
 create table order_maintenance_parts (
     order_number bigint not null references orders(order_number)
@@ -166,7 +202,7 @@ create index idx_order_maintenance_parts_part_id
     on order_maintenance_parts(maintenance_part_id);
 
 -- =========================
--- 12. Представление, близкое к таблице
+-- 13. Представление, близкое к таблице
 -- "Автомастерская" из РПЗ
 -- =========================
 create or replace view v_workshop_orders as

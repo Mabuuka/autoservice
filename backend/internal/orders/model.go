@@ -9,13 +9,13 @@ type Order struct {
 }
 
 type OrderView struct {
-	OrderNumber    int64  `json:"order_number"`
-	CarPlateNumber string `json:"car_plate_number"`
-	OwnerFullName  string `json:"owner_full_name"`
-	OwnerPhone     string `json:"owner_phone"`
-	ServiceName    string `json:"service_name"`
-	ReadyDate      string `json:"ready_date"`
-	Employees      string `json:"employees"`
+	OrderNumber    int64           `json:"order_number"`
+	CarPlateNumber string          `json:"car_plate_number"`
+	OwnerFullName  string          `json:"owner_full_name"`
+	OwnerPhone     string          `json:"owner_phone"`
+	ServiceName    string          `json:"service_name"`
+	ReadyDate      string          `json:"ready_date"`
+	Employees      []OrderEmployee `json:"employees"`
 }
 
 type OrderEmployee struct {
@@ -62,11 +62,13 @@ type UpdateOrderInput struct {
 
 type AssignEmployeesInput struct {
 	OrderNumber int64   `json:"order_number"`
-	EmployeeIDs []int64 `json:"employee_ids"`
+	EmployeeID  *int64  `json:"employee_id,omitempty"`
+	EmployeeIDs []int64 `json:"employee_ids,omitempty"`
 }
 
 type ReplaceEmployeesInput struct {
-	EmployeeIDs []int64 `json:"employee_ids"`
+	EmployeeID  *int64  `json:"employee_id,omitempty"`
+	EmployeeIDs []int64 `json:"employee_ids,omitempty"`
 }
 
 type RepairPartItemInput struct {
