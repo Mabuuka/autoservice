@@ -1,0 +1,67 @@
+[data-role] {
+    display: none;
+}
+
+.role-mechanic [data-role~="mechanic"] {
+    display: table-cell;
+}
+
+.role-admin [data-role~="admin"] {
+    display: table-cell;
+}
+
+.discription {
+    padding: 20px 0;
+    margin-bottom: 20px;
+}
+
+.orders-container {
+    background-color: var(--background);
+    padding: 20px;
+    margin-top: 10px;
+    border: 1px solid var(--accent);
+    border-radius: 12px;
+}
+
+.orders-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 16px;
+}
+
+.orders-table th {
+    padding: 15px 12px;
+    background-color: var(--accentbg);
+    border: 1px solid var(--accent); 
+    color: var(--text);
+    text-transform: uppercase;
+    border-bottom: 2px solid gray;
+}
+
+.orders-table td {
+    padding: 15px 12px;
+    border: 1px solid var(--accent); 
+    color: #333;
+    vertical-align: middle;
+}
+
+.orders-table th, .orders-table td {
+    padding: 10px;
+    border: 1px solid var(--accent); 
+}
+
+.orders-table tbody tr:hover {
+    background-color: #fcfcfc;
+}
+
+.orders-table tr:last-child td {
+    border-bottom: none;
+}
+
+.orders-body:empty::after {
+    content: "Заказов пока нет или идет загрузка...";
+    display: block;
+    padding: 20px;
+    color: #999;
+    text-align: center;
+}

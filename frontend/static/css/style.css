@@ -3,6 +3,7 @@
 @import "header.css";
 @import "main.css";
 @import "specific.css";
+@import "table.css";
 
 html, body {
     height: 100%;
