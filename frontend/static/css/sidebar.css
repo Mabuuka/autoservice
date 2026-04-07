@@ -1,0 +1,59 @@
+@import "variables.css";
+
+.sidebar{
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    width: 260px;
+    height: 100vh;
+    font-family: var(--main-font);
+    font-size: 24px;
+    background-color: var(--background);
+}
+
+.logo{
+    text-align: center;
+    font-size: 36px;
+}
+
+.menu{
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.menu-item{
+    padding: 8px;
+    margin: 12px 16px;
+    text-decoration: none;
+    color: var(--text) ;
+    transition: 0.3s;
+}
+
+.menu-item:hover{
+    color: var(--accent);
+    text-decoration: underline;
+    background-color: var(--accentbg);
+    border-radius: 8px;
+}
+
+.logout-btn{
+    text-decoration: none;
+    padding: 12px 24px;
+    margin: 0 auto;
+    margin-bottom: 36px;
+    
+    color: red;
+    background-color: rgba(250, 106, 106, 0.384);
+    border-radius: 16px;
+    transition: 0.3s;
+}
+.logout-btn:hover{
+    background-color: rgba(255, 0, 0, 0.712);
+    color: var(--text);
+}
+
+.active{
+    background-color: var(--accentbg);
+    border: 2px solid var(--accent);
+}

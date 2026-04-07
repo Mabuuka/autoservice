@@ -4,10 +4,35 @@
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Автомастерская</title>
-    <link rel="stylesheet" href="/static/css/style.css" />
+    <link rel="stylesheet" href="../static/css/style.css" />
 </head>
 <body>
-    <h1>Сайт автомастерской</h1>
-    <p>Базовый backend подключён к PostgreSQL.</p>
+
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="logo"><b>Автомастерская</b></div>
+
+            <nav class="menu">
+                <a href="#" class="menu-item active" data-page="home">Главная</a>
+                <a href="#" class="menu-item" data-page="orders">Заказы</a>
+                <a href="#" class="menu-item admin-only" data-page="cars">Клиенты и автомобили</a>
+                <a href="#" class="menu-item admin-only" data-page="settings">Настройки мастерской</a>
+                <a href="#" class="menu-item admin-only" data-page="storage">Склад запчастей</a>
+                <a href="#" class="menu-item" data-page="profile">Профиль</a>
+            </nav>
+            <a href="/logout" class="logout-btn">Выйти</a>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-panel">
+                <div class="page-title"><b>Главная</b></div>
+                <div class="profile-name">Пользователь</div>
+            </header>
+            <div class="page-content">
+                
+            </div>
+        </main>
+    </div>
+
 </body>
 </html>

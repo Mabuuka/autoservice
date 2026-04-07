@@ -1,0 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Aldrich&family=WDXL+Lubrifont+TC&display=swap');
+
+
+:root{
+    --text: #070d0e;
+    --background: #f5f9fa;
+    --primary: #539db2;
+    --secondary: #9ca7d3;
+    --accent: #7a80ce;
+    --accentbg: #bbc9ff2d;
+
+    --main-font: "WDXL Lubrifont TC", sans-serif;
+    --accent-font: "Aldrich", sans-serif;
+}
