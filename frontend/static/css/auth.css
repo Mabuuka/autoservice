@@ -1,0 +1,171 @@
+:root{
+    --text: #070d0e;
+    --background: #f5f9fa;
+    --primary: #539db2;
+    --secondary: #9ca7d3;
+    --accent: #8488c8;
+}
+
+body {
+    margin: 0;
+    font-family: "WDXL Lubrifont TC", sans-serif; 
+}
+
+.bg-img{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    z-index: -1;
+    filter:blur(12px);
+    transform: scale(1.1);
+}
+
+.content-wrapper{
+    z-index: 1;
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.loginsection{
+    display:flex;
+    flex-direction: column;
+    max-width: 500px;
+    min-height: 520px;
+    border: 3px solid var(--primary);
+    border-radius: 12px;
+    background-color: var(--background);
+    padding: 20px;
+    color: var(--text);
+    font-size: 2rem;
+    align-items: center;
+    transition: opacity 0.5s ease, transform 0.5 ease;
+    
+}
+
+.loginsection h2{
+    text-decoration: underline;
+}
+
+#registration{
+    opacity: 0;
+}
+
+#login{
+    animation: fadeIn 0.5s forwards;
+}
+
+.loginform{
+    display: grid;
+    grid-template-columns: 1fr 2.5fr;
+    gap: 24px;
+    margin-bottom: auto;
+    width: 85%;
+}
+
+.loginform input{
+    width: 90%;
+    padding: 4px;
+    font-size: 1.5rem;
+    border: 2px solid var(--primary);
+    border-radius: 8px;
+    transition: border-color 0.3s ease;
+    background-color: var(--background);
+}
+
+.loginform input:focus{
+    border: 2px solid var(--accent);
+    outline: none;
+}
+
+.reg-form{
+    display: grid;
+    grid-template-columns: 1fr 2.5fr;
+    gap: 24px;
+    margin-bottom: auto;
+    width: 85%;
+}
+
+.reg-form input{
+    width: 90%;
+    padding: 4px;
+    font-size: 1.5rem;
+    border: 2px solid var(--primary);
+    border-radius: 8px;
+    transition: border-color 0.3s ease;
+    background-color: var(--background);
+}
+
+.reg-form input:focus{
+    border: 2px solid var(--accent);
+    outline: none;
+}
+
+input::placeholder{
+    color: var(--text);
+    opacity: 1;
+}
+
+.button{
+    min-width: 50%;
+    font-size: 1.8rem;
+    border: 2px solid var(--primary);
+    border-radius: 18px;
+    padding: 8px 24px;
+    cursor: pointer;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    background-color: var(--background);
+    color: var(--text);
+}
+
+.button:hover{
+    background-color: var(--accent);
+    color: #000;
+    transition: 0.3s;
+    border-color: var(--accent);
+    transform: translateY(4px);
+}
+
+.button:active{
+    transform: translateY(8px);
+    transition: 0.1s;
+}
+
+.toggle-checkbox{
+    display: none;
+}
+
+.switch-button{
+    cursor: pointer;
+    color: var(--accent);
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.switch-button:hover{
+    text-decoration: underline;
+}
+
+#form-switch:checked ~ #login{
+    display: none;
+}
+
+#form-switch:checked ~ #registration{
+    display: flex;
+    animation: fadeIn 0.5s forwards;
+}
+
+#form-switch:not(:checked) ~ #registration {
+    display: none;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
