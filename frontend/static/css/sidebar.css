@@ -9,6 +9,8 @@
     font-family: var(--main-font);
     font-size: 24px;
     background-color: var(--background);
+    border-right: 2px dotted var(--accent);
+    position-anchor: initial;
 }
 
 .logo{
