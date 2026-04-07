@@ -15,7 +15,7 @@
     margin-bottom: 20px;
 }
 
-.orders-container {
+.tcontainer {
     background-color: var(--background);
     padding: 20px;
     margin-top: 10px;
@@ -23,13 +23,13 @@
     border-radius: 12px;
 }
 
-.orders-table {
+.table {
     width: 100%;
     border-collapse: collapse;
     font-size: 16px;
 }
 
-.orders-table th {
+.table th {
     padding: 15px 12px;
     background-color: var(--accentbg);
     border: 1px solid var(--accent); 
@@ -38,27 +38,27 @@
     border-bottom: 2px solid gray;
 }
 
-.orders-table td {
+.table td {
     padding: 15px 12px;
     border: 1px solid var(--accent); 
     color: #333;
     vertical-align: middle;
 }
 
-.orders-table th, .orders-table td {
+.table th, .table td {
     padding: 10px;
     border: 1px solid var(--accent); 
 }
 
-.orders-table tbody tr:hover {
-    background-color: #fcfcfc;
+.table tbody tr:hover {
+    background-color: var(--background);
 }
 
-.orders-table tr:last-child td {
+.table tr:last-child td {
     border-bottom: none;
 }
 
-.orders-body:empty::after {
+.tbody:empty::after {
     content: "Заказов пока нет или идет загрузка...";
     display: block;
     padding: 20px;
