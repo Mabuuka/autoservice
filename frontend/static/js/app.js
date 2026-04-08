@@ -1,12 +1,16 @@
 const pageContent = document.querySelector(".page-content");
 const pageTitle = document.querySelector(".page-title b");
-const menuItem = document.querySelectorAll(".menu-item");
+const menuItems = document.querySelectorAll(".menu-item");
 
 async function loadPage(pageName){
     try{
+        const response = await fetch(`../static/partials/${pageName}-content.html`);
+        
+        if (!response.ok) {
+            throw new Error("Страница не найдена");
+        }
 
-        const responce = await fetch(`../static/partials/${pageName}-content.html`);
-        const html = await responce.text();
+        const html = await response.text();
         pageContent.innerHTML = html;
 
     } catch (error){
@@ -15,16 +19,28 @@ async function loadPage(pageName){
     }
 }
 
+function initApp(){
+    const activeMenuItem = document.querySelector(".menu-item.active");
 
-menuItem.forEach( item => {
+    if (!activeMenuItem) return;
+
+    const page = activeMenuItem.dataset.page;
+    pageTitle.textContent = activeMenuItem.textContent.trim();
+    loadPage(page);
+}
+
+menuItems.forEach(item => {
     item.addEventListener("click", (event) =>{
         event.preventDefault();
 
-        const page = item.getAttribute('data-page');
-        pageTitle.textContent = item.textContent;
+        const currentItem = event.currentTarget;
+        const page = currentItem.dataset.page;
+        pageTitle.textContent = currentItem.textContent.trim();
         loadPage(page);
 
         document.querySelector('.menu-item.active')?.classList.remove('active');
-        item.classList.add('active');
+        currentItem.classList.add('active');
     });
 });
+
+initApp();
