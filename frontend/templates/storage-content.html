@@ -1,0 +1,38 @@
+<section class="storage-page">
+
+    <div class="discription-storage discription">
+        <h2 class="storage-page-discription page-discription">Содержимое склада: запчасти и расходники</h2>
+        <button class="create-storage-part create" data-role="admin">Новый расходник/запчасть <strong>+</strong></button>
+    </div>
+
+    <div class="storage-container tcontainer">
+        <table class="storage-table table">
+            <thead>
+                <tr>
+                    <th>Наименование</th>
+                    <th>Количество</th>
+                    <th>Дата поставки</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody class="storage-body tbody">
+
+            </tbody>
+        </table>
+    </div>
+
+    <template id="storage-row-template">
+        <tr class="storage-row">
+            <td class="part-name"></td>
+            <td class="part-quantity"></td>
+            <td class="part-delivery-date"></td>
+            <td class="storage-actions">
+                <div class="action-group">
+                    <button type="button" data-action="order">Заказать</button>
+                    <button type="button" data-action="delete" class="delete-btn admin-only-btn">Удалить</button>
+                </div>
+            </td>
+        </tr>
+    </template>
+
+</section>

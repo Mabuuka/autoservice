@@ -128,3 +128,11 @@
     margin-top: auto;
     padding: 4px 8px;
 }
+
+.admin-only-btn {
+    display: none;
+}
+
+.role-admin .admin-only-btn {
+    display: inline-block;
+}
