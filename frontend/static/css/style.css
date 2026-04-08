@@ -4,6 +4,7 @@
 @import "main.css";
 @import "specific.css";
 @import "table.css";
+@import "profile.css";
 
 html, body {
     height: 100%;

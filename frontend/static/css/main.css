@@ -69,3 +69,25 @@
     transform: translateY(-5px);
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
+
+.button{
+    margin: auto 32px;
+    padding: 8px 12px;
+    border: 2px solid var(--accent);
+    border-radius: 12px;
+    background-color: var(--accentbg);
+    color: var(--text);
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.button:hover{
+    border-color: var(--primary);
+    background-color: var(--primarybg);
+    color: var(--primary);
+}
+
+.button:active{
+    transform: translateY(4px);
+    transition: 0.1s;
+}

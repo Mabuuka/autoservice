@@ -63,7 +63,7 @@
     margin: 0;
 }
 
-.create{
+.create-button{
     margin: 8px;
     padding: 8px 24px;
     color: var(--text);
@@ -71,9 +71,10 @@
     border-radius: 12px;
     background-color: var(--accentbg);
     font-size: 18px;
+    cursor: pointer;
 }
 
-.create:hover{
+.create-button:hover{
     color: var(--accept);
     border: 2px solid var(--accept);
     border-radius: 12px;
@@ -81,7 +82,7 @@
     transition: 0.3s;
 }
 
-.create:active{
+.create-button:active{
     transform:translateY(4px);
     transition: 0.1s;
 }

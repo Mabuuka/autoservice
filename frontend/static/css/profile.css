@@ -1,0 +1,29 @@
+@import "variables.css";
+
+*{
+    font-size: 24px;
+}
+
+.email-phone-content{
+    display: flex;
+    margin: 12px 0;
+    gap: 20px;
+}
+
+.change-user-phone-btn{
+    width: fit-content;
+    height: fit-content;
+}
+
+.passwor-change{
+    display: flex;
+    flex-direction: column;
+}
+
+.password-change input{
+    width: 240px;
+    font-size: 24px;
+    border-radius: 8px;
+    margin: 0 12px;
+    padding: 4px;
+}
