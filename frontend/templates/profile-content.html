@@ -10,7 +10,7 @@
             <p class="user-phone">+7(900)000-00-00</p>
             <button class="change-user-phone-btn button">Сменить номер телефона</button>
         </div>
-        <div class="password-change">
+        <div class="password-to-change">
             <label for="current-password">Текущий пароль</label>
             <input type="password" id="current-password" class="password-change" placeholder="Введите текущий пароль">
 
@@ -26,20 +26,21 @@
             <h2 class="page-discription">Ваши транспортные средства</h2>
             <button class="add-car create-button">Добавить авто <strong>+</strong></button>
         </div>
-        <div class="user-added-cars">
-            <template id="car-card-template">
-                <article class="car-card">
-                    <h3 class="car-brand"></h3>
-                    <p class="car-plate"></p>
-                    <p class="car-year"></p>
-                    <p class="car-color"></p>
+        <div class="user-added-cars"></div>
 
-                    <div class="car-actions">
-                        <button type="button" data-action="delete">Удалить</button>
-                    </div>
-                </article>
-            </template>
-        </div>
+        <template id="car-card-template">
+            <article class="car-card">
+                <h3 class="car-brand"></h3>
+                <p class="car-plate"></p>
+                <p class="car-year"></p>
+                <p class="car-color"></p>
+
+                <div class="car-actions">
+                    <button type="button" data-action="delete">Удалить</button>
+                </div>
+            </article>
+        </template>
+        
     </section>
 
 </section>

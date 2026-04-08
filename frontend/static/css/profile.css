@@ -1,7 +1,7 @@
 @import "variables.css";
 
-*{
-    font-size: 24px;
+.profile-page{
+    font-size: 20px;
 }
 
 .email-phone-content{
@@ -15,12 +15,7 @@
     height: fit-content;
 }
 
-.passwor-change{
-    display: flex;
-    flex-direction: column;
-}
-
-.password-change input{
+.password-to-change input{
     width: 240px;
     font-size: 24px;
     border-radius: 8px;
