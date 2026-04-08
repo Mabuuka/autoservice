@@ -51,7 +51,7 @@
     text-decoration: underline;
 }
 
-.discription-orders{
+.discription{
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -59,11 +59,11 @@
     margin-bottom: 20px;
 }
 
-.orders-page-discription{
+.page-discription{
     margin: 0;
 }
 
-.create-order{
+.create{
     margin: 8px;
     padding: 8px 24px;
     color: var(--text);
@@ -73,7 +73,7 @@
     font-size: 18px;
 }
 
-.create-order:hover{
+.create:hover{
     color: var(--accept);
     border: 2px solid var(--accept);
     border-radius: 12px;
@@ -81,7 +81,7 @@
     transition: 0.3s;
 }
 
-.create-order:active{
+.create:active{
     transform:translateY(4px);
     transition: 0.1s;
 }
@@ -89,4 +89,42 @@
 .role-mechanic .create-order,
 .role-admin .create-order {
     display: none;
+}
+
+.services-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 20px;
+    width: 100%;
+    align-items: stretch;
+}
+
+.service-title {
+    font-size: 24px;
+    margin-top: 0;
+    color: var(--text);
+}
+
+.service-description {
+    font-size: 18px;
+    color: var(--textsecondary);
+    flex-grow: 1;
+}
+
+.service-price {
+    font-size: 20px;
+    font-weight: bold;
+    margin: 15px 0;
+    color: var(--text);
+}
+
+.service-price::after {
+    content: " ₽";
+}
+
+.service-actions {
+    display:flex;
+    gap: 12px;
+    margin-top: auto;
+    padding: 4px 8px;
 }
