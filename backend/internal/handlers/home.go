@@ -21,3 +21,12 @@ func (h *HomeHandler) Index(w http.ResponseWriter, r *http.Request) {
 
 	http.ServeFile(w, r, filepath.Join(h.TemplatesDir, "index.html"))
 }
+
+func (h *HomeHandler) Auth(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/auth" {
+		http.NotFound(w, r)
+		return
+	}
+
+	http.ServeFile(w, r, filepath.Join(h.TemplatesDir, "auth.html"))
+}

@@ -54,6 +54,7 @@ func New(cfg config.Config, db *pgxpool.Pool) *http.ServeMux {
 	mux.Handle("/static/", http.StripPrefix("/static/", staticFS))
 
 	mux.HandleFunc("/", homeHandler.Index)
+	mux.HandleFunc("/auth", homeHandler.Auth)
 	mux.HandleFunc("/api/health", healthHandler.Check)
 
 	mux.HandleFunc("/api/auth/register", func(w http.ResponseWriter, r *http.Request) {
