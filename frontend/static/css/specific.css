@@ -70,8 +70,10 @@
     border: 2px solid var(--accent);
     border-radius: 12px;
     background-color: var(--accentbg);
-    font-size: 18px;
+    font-size: 20px;
     cursor: pointer;
+    text-transform: uppercase;
+    font-weight: bold;
 }
 
 .create-button:hover{

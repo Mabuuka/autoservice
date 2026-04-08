@@ -33,7 +33,7 @@
 }
 
 .menu-item:hover{
-    color: var(--accent);
+    color: var(--primary);
     text-decoration: underline;
     background-color: var(--accentbg);
     border-radius: 8px;
