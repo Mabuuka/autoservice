@@ -37,7 +37,57 @@ func (r *Repository) GetAll(ctx context.Context) ([]OrderView, error) {
 		ORDER BY v.order_number
 	`
 
-	rows, err := r.DB.Query(ctx, query)
+	return r.queryOrderViews(ctx, query)
+}
+
+func (r *Repository) GetByOwnerID(ctx context.Context, ownerID int64) ([]OrderView, error) {
+	query := `
+		SELECT
+			v.order_number,
+			v.car_plate_number,
+			v.owner_full_name,
+			v.owner_phone,
+			v.service_name,
+			TO_CHAR(v.ready_date, 'YYYY-MM-DD') AS ready_date,
+			e.employee_id,
+			e.full_name,
+			e.specialty
+		FROM automaster.v_workshop_orders v
+		JOIN automaster.orders o ON o.order_number = v.order_number
+		JOIN automaster.cars c ON c.car_id = o.car_id
+		LEFT JOIN automaster.order_employees oe ON oe.order_number = v.order_number
+		LEFT JOIN automaster.employees e ON e.employee_id = oe.employee_id
+		WHERE c.owner_id = $1
+		ORDER BY v.order_number
+	`
+
+	return r.queryOrderViews(ctx, query, ownerID)
+}
+
+func (r *Repository) GetByEmployeeID(ctx context.Context, employeeID int64) ([]OrderView, error) {
+	query := `
+		SELECT
+			v.order_number,
+			v.car_plate_number,
+			v.owner_full_name,
+			v.owner_phone,
+			v.service_name,
+			TO_CHAR(v.ready_date, 'YYYY-MM-DD') AS ready_date,
+			e.employee_id,
+			e.full_name,
+			e.specialty
+		FROM automaster.v_workshop_orders v
+		JOIN automaster.order_employees oe ON oe.order_number = v.order_number
+		JOIN automaster.employees e ON e.employee_id = oe.employee_id
+		WHERE oe.employee_id = $1
+		ORDER BY v.order_number
+	`
+
+	return r.queryOrderViews(ctx, query, employeeID)
+}
+
+func (r *Repository) queryOrderViews(ctx context.Context, query string, args ...any) ([]OrderView, error) {
+	rows, err := r.DB.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}

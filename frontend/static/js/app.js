@@ -1,13 +1,44 @@
 const pageContent = document.querySelector(".page-content");
+const logoutBtn = document.querySelector(".logout-btn");
 const pageTitle = document.querySelector(".page-title b");
 const menuItems = document.querySelectorAll(".menu-item");
+const profileName = document.querySelector(".top-panel .profile-name");
 
-let currentPageLoaded ="home";
+let currentPageLoaded = "home";
+let currentUserRole = "";
 
-async function loadPage(pageName){
-    try{
+async function getCurrentUser() {
+    const response = await fetch("/api/profile/me");
+
+    if (!response.ok) {
+        throw new Error("Не удалось получить данные текущего пользователя");
+    }
+
+    const result = await response.json();
+    return result.data;
+}
+
+function applyRoleVisibility(root, currentUserRole) {
+    const roleElements = root.querySelectorAll("[data-role]");
+
+    for (const element of roleElements) {
+        const allowedRoles = element.dataset.role;
+
+        if (!allowedRoles) {
+            continue;
+        }
+
+        const roles = allowedRoles.split(" ");
+        const isAllowed = roles.includes(currentUserRole);
+
+        element.hidden = !isAllowed;
+    }
+}
+
+async function loadPage(pageName) {
+    try {
         const response = await fetch(`../static/partials/${pageName}-content.html`);
-        
+
         if (!response.ok) {
             throw new Error("Страница не найдена");
         }
@@ -15,45 +46,76 @@ async function loadPage(pageName){
         const html = await response.text();
         pageContent.innerHTML = html;
 
+        if (currentUserRole) {
+            applyRoleVisibility(pageContent, currentUserRole);
+        }
 
         currentPageLoaded = pageName;
-        initialization(pageName);
+        await initialization(pageName);
+
         console.log(`${pageName} page initialized`);
-    } catch (error){
-        pageContent.innerHTML = '<h2>Ошибка загрузки страницы</h2>';
+    } catch (error) {
+        pageContent.innerHTML = "<h2>Ошибка загрузки страницы</h2>";
         console.error(error);
     }
 }
 
-function initApp(){
+async function initApp() {
     const activeMenuItem = document.querySelector(".menu-item.active");
 
-    if (!activeMenuItem) return;
+    if (!activeMenuItem) {
+        return;
+    }
 
     const page = activeMenuItem.dataset.page;
     pageTitle.textContent = activeMenuItem.textContent.trim();
-    loadPage(page);
+
+    const profile = await getCurrentUser();
+    currentUserRole = profile.user.role;
+
+    const menu = document.querySelector(".menu");
+    applyRoleVisibility(menu, currentUserRole);
+
+    if (profileName) {
+        profileName.textContent = profile.user.full_name;
+    }
+
+    await loadPage(page);
 }
 
 menuItems.forEach(item => {
-    item.addEventListener("click", (event) =>{
+    item.addEventListener("click", async event => {
         event.preventDefault();
 
         const currentItem = event.currentTarget;
         const page = currentItem.dataset.page;
-        pageTitle.textContent = currentItem.textContent.trim();
-        loadPage(page);
 
-        document.querySelector('.menu-item.active')?.classList.remove('active');
-        currentItem.classList.add('active');
+        pageTitle.textContent = currentItem.textContent.trim();
+        await loadPage(page);
+
+        document.querySelector(".menu-item.active")?.classList.remove("active");
+        currentItem.classList.add("active");
     });
 });
 
-function initialization(currentPageLoaded){
-    if (currentPageLoaded === "home"){
+if (logoutBtn) {
+    logoutBtn.addEventListener("click", async event => {
+        event.preventDefault();
+
+        try {
+            await logout();
+        } catch (error) {
+            console.error(error);
+            alert("Не удалось выйти из аккаунта");
+        }
+    });
+}
+
+async function initialization(currentPageLoaded) {
+    if (currentPageLoaded === "home") {
         homePageHandler();
     } else if (currentPageLoaded === "orders") {
-        ordersPageHandler();
+        await ordersPageHandler();
     }
 }
 
@@ -61,54 +123,116 @@ function homePageHandler() {
 }
 
 async function ordersPageHandler() {
+    const table = pageContent.querySelector(".orders-table");
     const tableBody = pageContent.querySelector("tbody");
 
+    if (!table || !tableBody) {
+        return;
+    }
+
     async function getOrders() {
-    const response = await fetch("/api/orders");
+        const response = await fetch("/api/orders");
 
-    if (!response.ok) {
-        throw new Error("Не удалось получить заказы");
+        if (!response.ok) {
+            throw new Error("Не удалось получить заказы");
+        }
+
+        const result = await response.json();
+        return result.data;
     }
 
-    const result = await response.json();
-    return result.data;
+    function getEmployeesText(employees) {
+        if (!employees || employees.length === 0) {
+            return "—";
+        }
+
+        return employees.map(employee => employee.full_name).join(", ");
     }
 
-    const orders = await getOrders();
-    console.log(orders);
+    function getVisibleColumnsCount(table) {
+        return table.querySelectorAll("thead th:not([hidden])").length;
+    }
+
+    function renderTableMessage(message) {
+        const visibleColumnsCount = getVisibleColumnsCount(table);
+
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="${visibleColumnsCount}">${message}</td>
+            </tr>
+        `;
+    }
 
     function renderOrders(orders, tableBody) {
-    tableBody.innerHTML = orders.map(order => `
-        <tr>
-            <td>${order.order_number}</td>
-            <td>${order.car_plate_number}</td>
-            <td>${order.owner_full_name}</td>
-            <td>${order.owner_phone}</td>
-            <td>${order.service_name}</td>
-            <td>${order.ready_date}</td>
-        </tr>
-    `).join("");
+        tableBody.innerHTML = orders.map(order => `
+            <tr>
+                <td>${order.order_number ?? "—"}</td>
+                <td data-role="master admin">${order.owner_full_name ?? "—"}</td>
+                <td>${order.car_plate_number ?? "—"}</td>
+                <td>${order.service_name ?? "—"}</td>
+                <td>${order.owner_phone ?? "—"}</td>
+                <td data-role="admin">${getEmployeesText(order.employees)}</td>
+                <td>${order.ready_date ?? "—"}</td>
+            </tr>
+        `).join("");
+
+        applyRoleVisibility(tableBody, currentUserRole);
     }
-    renderOrders(orders, tableBody);
+
+    try {
+        const orders = await getOrders();
+        console.log(orders);
+
+        if (!orders.length) {
+            renderTableMessage("Заказов пока нет");
+            return;
+        }
+
+        renderOrders(orders, tableBody);
+    } catch (error) {
+        console.error(error);
+        renderTableMessage("Не удалось загрузить заказы");
+    }
 }
 
 async function checkAuth() {
-const response = await fetch("/api/profile/me");
+    try {
+        const response = await fetch("/api/profile/me");
 
-if (!response.ok) {
-    window.location.href = "/auth";
-    return false;
+        if (!response.ok) {
+            window.location.href = "/auth";
+            return false;
+        }
+
+        return true;
+    } catch (error) {
+        console.error(error);
+        window.location.href = "/auth";
+        return false;
+    }
 }
 
-return true;
+async function logout() {
+    const response = await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "same-origin",
+    });
+
+    if (!response.ok) {
+        throw new Error("Не удалось выполнить выход");
+    }
+
+    window.location.href = "/auth";
 }
 
 async function startApp() {
     const isAuthorized = await checkAuth();
 
-    if (!isAuthorized) return;
+    if (!isAuthorized) {
+        return;
+    }
 
-    initApp();
+    await initApp();
 }
 
 startApp();

@@ -39,13 +39,14 @@
 }
 
 .logout-btn{
-    text-decoration: none;
+    font-size: 24px;
     padding: 12px 24px;
     margin: 0 auto;
     margin-bottom: 36px;
     
     color: red;
     background-color: rgba(250, 106, 106, 0.384);
+    border: 2px solid red;
     border-radius: 16px;
     transition: 0.3s;
 }

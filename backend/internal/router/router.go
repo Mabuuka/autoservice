@@ -44,11 +44,11 @@ func New(cfg config.Config, db *pgxpool.Pool) *http.ServeMux {
 	maintenancePartsRepo := maintenanceparts.NewRepository(db)
 	maintenancePartsHandler := maintenanceparts.NewHandler(maintenancePartsRepo)
 
-	ordersRepo := orders.NewRepository(db)
-	ordersHandler := orders.NewHandler(ordersRepo)
-
 	usersRepo := users.NewRepository(db)
 	usersHandler := users.NewHandler(usersRepo, sessionManager)
+
+	ordersRepo := orders.NewRepository(db)
+	ordersHandler := orders.NewHandler(ordersRepo, usersRepo)
 
 	staticFS := http.FileServer(http.Dir(cfg.StaticDir))
 	mux.Handle("/static/", http.StripPrefix("/static/", staticFS))
@@ -205,7 +205,7 @@ func New(cfg config.Config, db *pgxpool.Pool) *http.ServeMux {
 		}
 	})
 
-	mux.HandleFunc("/api/orders", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/orders", sessionManager.RequireAuth(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			ordersHandler.GetAll(w, r)
@@ -214,7 +214,7 @@ func New(cfg config.Config, db *pgxpool.Pool) *http.ServeMux {
 		default:
 			api.MethodNotAllowed(w, "GET, POST")
 		}
-	})
+	}))
 
 	mux.HandleFunc("/api/orders/form-data", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {

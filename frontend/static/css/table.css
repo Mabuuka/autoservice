@@ -1,15 +1,3 @@
-[data-role] {
-    display: none;
-}
-
-.role-mechanic [data-role~="mechanic"] {
-    display: table-cell;
-}
-
-.role-admin [data-role~="admin"] {
-    display: table-cell;
-}
-
 .discription {
     padding: 20px 0;
     margin-bottom: 20px;

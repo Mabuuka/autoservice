@@ -10,21 +10,68 @@ import (
 	"time"
 
 	"autoservice/backend/internal/api"
+	"autoservice/backend/internal/auth"
+	"autoservice/backend/internal/users"
 )
 
 type Handler struct {
-	Repo *Repository
+	Repo      *Repository
+	UsersRepo *users.Repository
 }
 
-func NewHandler(repo *Repository) *Handler {
-	return &Handler{Repo: repo}
+func NewHandler(repo *Repository, usersRepo *users.Repository) *Handler {
+	return &Handler{
+		Repo:      repo,
+		UsersRepo: usersRepo,
+	}
 }
 
 func (h *Handler) GetAll(w http.ResponseWriter, r *http.Request) {
+	userID, ok := auth.UserIDFromContext(r.Context())
+	if !ok || userID <= 0 {
+		api.WriteError(w, http.StatusUnauthorized, "unauthorized", "Authentication is required.")
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
 	defer cancel()
 
-	orders, err := h.Repo.GetAll(ctx)
+	currentUser, err := h.UsersRepo.GetAuthUserByID(ctx, userID)
+	if err != nil {
+		switch {
+		case errors.Is(err, users.ErrUserNotFound):
+			api.WriteError(w, http.StatusUnauthorized, "unauthorized", "Current user was not found.")
+		default:
+			api.Internal(w, "Failed to fetch current user.")
+		}
+		return
+	}
+
+	var orders []OrderView
+
+	switch currentUser.Role {
+	case "admin":
+		orders, err = h.Repo.GetAll(ctx)
+
+	case "client":
+		if currentUser.OwnerID == nil || *currentUser.OwnerID <= 0 {
+			api.WriteError(w, http.StatusForbidden, "forbidden", "Current client is not linked to an owner.")
+			return
+		}
+		orders, err = h.Repo.GetByOwnerID(ctx, *currentUser.OwnerID)
+
+	case "master":
+		if currentUser.EmployeeID == nil || *currentUser.EmployeeID <= 0 {
+			api.WriteError(w, http.StatusForbidden, "forbidden", "Current master is not linked to an employee.")
+			return
+		}
+		orders, err = h.Repo.GetByEmployeeID(ctx, *currentUser.EmployeeID)
+
+	default:
+		api.WriteError(w, http.StatusForbidden, "forbidden", "Your role is not allowed to view orders.")
+		return
+	}
+
 	if err != nil {
 		api.Internal(w, "Failed to fetch orders.")
 		return
