@@ -116,6 +116,8 @@ async function initialization(currentPageLoaded) {
         homePageHandler();
     } else if (currentPageLoaded === "orders") {
         await ordersPageHandler();
+    } else if (currentPageLoaded === "cars") {
+        await carsPageHandler();
     }
 }
 
@@ -193,6 +195,67 @@ async function ordersPageHandler() {
         console.error(error);
         renderTableMessage("Не удалось загрузить заказы");
     }
+}
+
+async function carsPageHandler () {
+    const table = pageContent.querySelector(".cars-table");
+    const tableBody = table.querySelector("tbody");
+
+    if (!table || !tableBody) {
+        return;
+    }
+
+    async function getCars() {
+        const response = await fetch("/api/cars");
+
+        if (!response.ok){
+            throw new Error("Не удалось получить данные о машинах и их владельцах");
+        }
+
+        const result = await response.json();
+        return result.data;
+    }
+
+    function getVisibleColumnsCount(table) {
+        return table.querySelectorAll("thead th:not([hidden])").length;
+    }
+
+    function renderTableMessage(message) {
+        const visibleColumnsCount = getVisibleColumnsCount(table);
+
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="${visibleColumnsCount}">${message}</td>
+            </tr>
+        `;
+    }
+
+    function renderCars(cars, tableBody) {
+        tableBody.innerHTML = cars.map (car => 
+            `<tr>
+                <td>${car.owner_full_name ?? "—"}</td>
+                <td>${car.brand ?? "—"}</td>
+                <td>${car.plate_number ?? "—"}</td>
+                <td>${car.manufacture_year ?? "—"}</td>
+            </tr>`
+            ).join("");            
+    }
+
+    try {
+        const cars = await getCars();
+        console.log(cars);
+
+        if (!cars.length) {
+            renderTableMessage("Данных о машинах пока нет");
+            return;
+        }
+
+        renderCars(cars, tableBody);
+    } catch (error) {
+        console.error(error);
+        renderTableMessage("Не удалось загрузить данные о машинах и владельцах");
+    }
+
 }
 
 async function checkAuth() {
