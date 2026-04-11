@@ -28,11 +28,34 @@
             <td class="part-delivery-date"></td>
             <td class="storage-actions">
                 <div class="action-group">
-                    <button type="button" data-action="order">Заказать</button>
-                    <button type="button" data-action="delete" class="delete-btn admin-only-btn">Удалить</button>
+                    <button type="button">Заказать</button>
                 </div>
             </td>
         </tr>
     </template>
 
+    <div class="storage-popup" hidden>
+        <div class="storage-popup-backdrop"></div>
+
+        <div class="storage-popup-card">
+            <h3>Заказать позицию</h3>
+
+            <form class="storage-order-form">
+                <label>
+                    Количество  
+                    <input type="number" name="quantity" min="1" required>
+                </label>
+
+                <label>
+                    Дата поставки
+                    <input type="date" name="delivery_date" required>
+                </label>
+
+                <div class="storage-popup-actions">
+                    <button type="button" class="storage-popup-cancel">Отмена</button>
+                    <button type="submit">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </section>

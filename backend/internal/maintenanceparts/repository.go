@@ -2,9 +2,13 @@ package maintenanceparts
 
 import (
 	"context"
+	"errors"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+var ErrMaintenancePartNotFound = errors.New("maintenance part not found")
 
 type Repository struct {
 	DB *pgxpool.Pool
@@ -82,6 +86,45 @@ func (r *Repository) Create(ctx context.Context, input CreateMaintenancePartInpu
 		&part.DeliveryDate,
 	)
 	if err != nil {
+		return MaintenancePart{}, err
+	}
+
+	return part, nil
+}
+
+func (r *Repository) Restock(ctx context.Context, partID int64, input RestockMaintenancePartInput) (MaintenancePart, error) {
+	query := `
+		UPDATE automaster.maintenance_parts
+		SET
+			quantity = quantity + $2,
+			delivery_date = NULLIF($3, '')::date
+		WHERE maintenance_part_id = $1
+		RETURNING
+			maintenance_part_id,
+			name,
+			quantity,
+			COALESCE(TO_CHAR(delivery_date, 'YYYY-MM-DD'), '') AS delivery_date
+	`
+
+	var part MaintenancePart
+
+	err := r.DB.QueryRow(
+		ctx,
+		query,
+		partID,
+		input.Quantity,
+		input.DeliveryDate,
+	).Scan(
+		&part.MaintenancePartID,
+		&part.Name,
+		&part.Quantity,
+		&part.DeliveryDate,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return MaintenancePart{}, ErrMaintenancePartNotFound
+		}
+
 		return MaintenancePart{}, err
 	}
 

@@ -2,7 +2,9 @@ package maintenanceparts
 
 import (
 	"context"
+	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -70,4 +72,65 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_ = api.WriteCreated(w, "Maintenance part created successfully.", part)
+}
+
+func (h *Handler) Restock(w http.ResponseWriter, r *http.Request) {
+	partID, err := parseMaintenancePartID(r)
+	if err != nil {
+		api.BadRequest(w, err.Error())
+		return
+	}
+
+	var input RestockMaintenancePartInput
+
+	if err := api.DecodeJSONBody(r, &input); err != nil {
+		api.WriteRequestError(w, err)
+		return
+	}
+
+	input.DeliveryDate = strings.TrimSpace(input.DeliveryDate)
+
+	if input.Quantity <= 0 {
+		api.BadRequest(w, "quantity must be greater than 0.")
+		return
+	}
+
+	if input.DeliveryDate != "" {
+		if _, err := time.Parse("2006-01-02", input.DeliveryDate); err != nil {
+			api.BadRequest(w, "delivery_date must be in YYYY-MM-DD format.")
+			return
+		}
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+	defer cancel()
+
+	part, err := h.Repo.Restock(ctx, partID, input)
+	if err != nil {
+		switch {
+		case errors.Is(err, ErrMaintenancePartNotFound):
+			api.NotFound(w, "Maintenance part not found.")
+		case api.IsCheckViolation(err):
+			api.BadRequest(w, "quantity must be greater than 0.")
+		default:
+			api.Internal(w, "Failed to restock maintenance part.")
+		}
+		return
+	}
+
+	_ = api.WriteUpdated(w, "Maintenance part restocked successfully.", part)
+}
+
+func parseMaintenancePartID(r *http.Request) (int64, error) {
+	partIDStr := strings.TrimSpace(r.PathValue("id"))
+	if partIDStr == "" {
+		return 0, errors.New("maintenance part id is required")
+	}
+
+	partID, err := strconv.ParseInt(partIDStr, 10, 64)
+	if err != nil || partID <= 0 {
+		return 0, errors.New("maintenance part id must be a positive integer")
+	}
+
+	return partID, nil
 }

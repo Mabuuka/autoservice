@@ -194,6 +194,14 @@ func New(cfg config.Config, db *pgxpool.Pool) *http.ServeMux {
 		}
 	})
 
+	mux.HandleFunc("/api/repair-parts/{id}/restock", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPatch:
+			repairPartsHandler.Restock(w, r)
+		default:
+			api.MethodNotAllowed(w, "PATCH")
+		}
+	})
 	mux.HandleFunc("/api/maintenance-parts", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
@@ -202,6 +210,15 @@ func New(cfg config.Config, db *pgxpool.Pool) *http.ServeMux {
 			maintenancePartsHandler.Create(w, r)
 		default:
 			api.MethodNotAllowed(w, "GET, POST")
+		}
+	})
+
+	mux.HandleFunc("/api/maintenance-parts/{id}/restock", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPatch:
+			maintenancePartsHandler.Restock(w, r)
+		default:
+			api.MethodNotAllowed(w, "PATCH")
 		}
 	})
 

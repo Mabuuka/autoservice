@@ -12,3 +12,8 @@ type CreateMaintenancePartInput struct {
 	Quantity     int    `json:"quantity"`
 	DeliveryDate string `json:"delivery_date"`
 }
+
+type RestockMaintenancePartInput struct {
+	Quantity     int    `json:"quantity"`
+	DeliveryDate string `json:"delivery_date"`
+}
