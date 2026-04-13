@@ -2,22 +2,12 @@
 
     <h2 class="profile-sign">Профиль пользователя</h2>
     <p class="profile-name">Пользователь</p>
-    <p class="user-role" data-role="master admin">Механик</p>
+    <p class="user-role" data-role="master admin">Мастер</p>
 
     <section class="personal-data">
         <div class="email-phone-content">
             <p class="user-email">email@email.com</p>
             <p class="user-phone">+7(900)000-00-00</p>
-            <button class="change-user-phone-btn button">Сменить номер телефона</button>
-        </div>
-        <div class="password-to-change">
-            <label for="current-password">Текущий пароль</label>
-            <input type="password" id="current-password" class="password-change" placeholder="Введите текущий пароль">
-
-            <label for="new-password">Новый пароль</label>
-            <input type="password" id="new-password" class="password-change" placeholder="Введите новый пароль">
-
-            <button class="password-change-btn button">Сменить пароль</button>
         </div>
     </section>
     <hr>
@@ -36,11 +26,38 @@
                 <p class="car-color"></p>
 
                 <div class="car-actions">
-                    <button type="button" data-action="delete">Удалить</button>
+                    <button type="button" data-action="delete" class="delete-btn">Удалить</button>
                 </div>
             </article>
         </template>
-        
+    </section>
+    <section class="pop-up-create-car hidden">
+        <div class="popup-content">
+            <h2>Добавить новый автомобиль</h2>
+            <form id="add-car-form">
+                <div class="form-group">
+                    <label>Марка автомобиля</label>
+                    <input type="text" name="brand" placeholder="Напр. Toyota" required>
+                </div>
+                <div class="form-group">
+                    <label>Госномер</label>
+                    <input type="text" name="plate_number" placeholder="А000АА777" required>
+                </div>
+                <div class="form-group">
+                    <label>Год выпуска</label>
+                    <input type="number" name="manufacture_year" min="1900" max="2026" required>
+                </div>
+                <div class="form-group">
+                    <label>Цвет</label>
+                    <input type="text" name="color" placeholder="Черный" required>
+                </div>
+
+                <div class="popup-actions">
+                    <button type="button" class="secondary-btn" id="close-popup">Отмена</button>
+                    <button type="submit" class="primary-btn">Сохранить</button>
+                </div>
+            </form>
+        </div>
     </section>
 
 </section>

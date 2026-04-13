@@ -85,7 +85,7 @@
 .button:hover{
     border-color: var(--primary);
     background-color: var(--primarybg);
-    color: var(--primary);
+    color: var(--accent);
 }
 
 .button:active{

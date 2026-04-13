@@ -118,8 +118,10 @@ async function initialization(currentPageLoaded) {
         await ordersPageHandler();
     } else if (currentPageLoaded === "cars") {
         await carsPageHandler();
-    } else if (currentPageLoaded === "storage"){
+    } else if (currentPageLoaded === "storage") {
         await storagePageHandler();
+    } else if (currentPageLoaded === "profile") {
+        await profilePageHandler();
     }
 }
 
@@ -469,6 +471,167 @@ async function storagePageHandler() {
             alert("Не удалось сохранить изменения");
         }
     }
+}
+
+async function profilePageHandler() {
+    const profileName = pageContent.querySelector(".profile-name");
+    const profileRole = pageContent.querySelector(".user-role");
+
+    const profileEmail = pageContent.querySelector(".user-email");
+    const profilePhone = pageContent.querySelector(".user-phone");
+
+    const userCars = pageContent.querySelector(".user-added-cars");
+    const carTemplate = pageContent.querySelector("#car-card-template");
+
+    const profile = await getCurrentUser();
+
+    profileName.textContent = profile.user.full_name;
+
+    if (profile.user.role === "master"){
+        profileRole.textContent = "Мастер";
+    } else if (profile.user.role === "admin"){
+        profileRole.textContent = "Администратор";
+    }
+
+    profileEmail.textContent = profile.user.email;
+    profilePhone.textContent = profile.user.phone;
+
+    userCars.addEventListener("click", async (event) => {
+        const deleteButton = event.target.closest('[data-action="delete"]');
+        if (!deleteButton){
+            return;
+        }
+        const carToDelete = deleteButton.closest(".car-card");
+        if(!carToDelete){
+            return;
+        }
+
+        const carId = carToDelete.dataset.id;
+        if(!carId){
+            return;
+        }
+        
+       const response = await fetch(`/api/cars/${carId}`,{
+        method: "DELETE"
+       });
+       if (!response.ok){
+        throw new Error("Не удалось удалить машину");
+       }
+       await carsListRender()
+    });
+
+    const createCar = pageContent.querySelector(".add-car");
+    const popup = pageContent.querySelector(".pop-up-create-car");
+    const closePopup = pageContent.querySelector("#close-popup");
+    const addCarForm = pageContent.querySelector("#add-car-form");
+
+    function openCarPopup() {
+        popup.classList.remove("hidden");
+    }
+
+    function closeCarPopup() {
+        popup.classList.add("hidden");
+        addCarForm.reset();
+    }
+
+    if (!profile.owner){
+        return;
+    }
+
+    const ownerId = profile.owner.owner_id;
+
+    createCar.addEventListener("click", openCarPopup);
+    closePopup.addEventListener("click", closeCarPopup);
+
+     addCarForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        if(!ownerId){
+            return;
+        }
+
+        const formData = new FormData(addCarForm);
+        const carBrand = formData.get("brand").trim();
+        const carPlateNumber = formData.get("plate_number").trim();
+        const carManufactureYear = +formData.get("manufacture_year");
+        const carColor = formData.get("color").trim();
+
+        const carData = {
+            brand: carBrand,
+            plate_number: carPlateNumber,
+            manufacture_year: carManufactureYear,
+            color: carColor,
+            owner_id: ownerId
+        }
+
+        const response = await fetch("/api/cars",{
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(carData)
+        });
+
+        if (!response.ok) {
+            throw new Error("Не удалось создать запись о машине");
+        }
+        closeCarPopup();
+        await carsListRender();
+    });
+
+    async function getOwnerCars(ownerId) {
+        const response = await fetch("/api/cars");
+        if(!response.ok){
+            throw new Error("Не удалось получить список машин");
+        }
+
+        const result = await response.json();
+        const cars = result.data;
+
+        const ownerCars = [];
+
+        for (const car of cars){
+            if (car.owner_id === ownerId){
+                ownerCars.push(car);
+            }            
+        }
+        return ownerCars;
+    }
+
+    async function carsListRender() {
+        const currentOwnerCars = await getOwnerCars(ownerId);
+
+        if(!userCars || !carTemplate){
+            return;
+        }
+
+        userCars.innerHTML = "";
+
+        if(currentOwnerCars.length === 0){
+            userCars.textContent = "На данный момент не добавлено ни одной машины";
+            return;
+        }
+
+        currentOwnerCars.forEach(car => {
+            const carCard = carTemplate.content.cloneNode(true);
+            
+            const carCardClone = carCard.querySelector(".car-card");
+            carCardClone.dataset.id = car.car_id;
+
+            const carBrand = carCard.querySelector(".car-brand");
+            const carPlate = carCard.querySelector(".car-plate");
+            const carYear = carCard.querySelector(".car-year");
+            const carColor = carCard.querySelector(".car-color");
+
+            carBrand.textContent = car.brand ?? "—";
+            carPlate.textContent = car.plate_number ?? "—";
+            carYear.textContent = car.manufacture_year ?? "—";
+            carColor.textContent = car.color ?? "—";
+
+            userCars.append(carCard);   
+        });
+    }
+    await carsListRender();
 }
 
 async function checkAuth() {

@@ -139,3 +139,67 @@
 .role-admin .admin-only-btn {
     display: inline-block;
 }
+
+.user-added-cars{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    justify-items: space-evenly;
+    gap: 12px;
+}
+
+.car-card{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 100px;
+    font-size: 20px;
+    padding: 12px;
+    border: 2px solid var(--primary);
+    border-radius: 12px;
+    background-color: var(--accentbg);
+    transition: 0.5s;
+}
+
+.car-card:hover{
+    transform: translateY(-8px);
+    background-color: var(--accentbg);
+    border-color: var(--accent);
+}
+
+.car-actions{
+    margin-left: auto;
+}
+
+.car-brand{
+    text-align: center;
+}
+
+.car-plate{
+    display: border-box;
+    border-radius: 8px;
+    border: 1px solid black;
+    background-color: white;
+    margin: 8px;
+}
+
+.delete-btn{
+    padding: 8px;
+    color: var(--text);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    background-color: var(--accentbg);
+    font-size: 20px;
+    transition: 0.3s;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+
+.delete-btn:hover{
+    background-color: rgba(255, 0, 0, 0.27);
+    border: 1px solid red;
+    color: red;
+}
+
+.delete-btn:active{
+    transform: translateY(4px);
+}
