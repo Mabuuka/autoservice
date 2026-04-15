@@ -89,8 +89,7 @@
     transition: 0.1s;
 }
 
-.role-mechanic .create-order,
-.role-admin .create-order {
+.role-mechanic .create-order{
     display: none;
 }
 
@@ -130,14 +129,6 @@
     gap: 12px;
     margin-top: auto;
     padding: 4px 8px;
-}
-
-.admin-only-btn {
-    display: none;
-}
-
-.role-admin .admin-only-btn {
-    display: inline-block;
 }
 
 .user-added-cars{
@@ -202,4 +193,32 @@
 
 .delete-btn:active{
     transform: translateY(4px);
+}
+
+.popup-create-order {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+}
+
+.popup-create-order.hidden {
+    display: none;
+}
+
+.popup-create-order .popup-content {
+    background-color: var(--background);
+    padding: 30px;
+    border-radius: 16px;
+    border: 2px solid var(--primary);
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    gap: 4px;
+    font-size: 16px;
 }

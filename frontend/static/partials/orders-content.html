@@ -2,7 +2,7 @@
 
     <div class="discription-orders discription">
         <h2 class="orders-page-discription page-discription">Ваши заказы собраны здесь!</h2>
-        <button class="create-order create-button">Создать заказ <strong>+</strong></button>
+        <button class="create-order create-button" data-role="master">Создать заказ <strong>+</strong></button>
     </div>
 
     <div class="orders-container tcontainer">
@@ -10,11 +10,10 @@
             <thead>
                 <tr>
                     <th>№ Заказа</th>
-                    <th data-role="master admin">Клиент</th>
+                    <th data-role="master">Клиент</th>
                     <th>Машина</th>
                     <th>Услуга</th>
                     <th>Номер для связи</th>
-                    <th data-role="admin">Мастер</th>
                     <th>Дата</th>
                 </tr>
             </thead>
@@ -23,5 +22,62 @@
         </table>
         
     </div>
+    <section class="popup-create-order hidden">
+        <div class="popup-content">
+            <h2>Создать заказ</h2>
+            <form class="create-order-form">
+                <div class="form-group">
+                    <label for="order-master">Мастер</label>
+                    <input
+                        type="text"
+                        id="order-master"
+                        name="master_name"
+                        readonly
+                        placeholder="Будет подставлен автоматически"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="order-car">Машина</label>
+                    <select id="order-car" name="car_id" required>
+                        <option value="">Выберите автомобиль</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="order-owner">Владелец</label>
+                    <input
+                        type="text"
+                        id="order-owner"
+                        name="owner_name"
+                        readonly
+                        placeholder="Заполнится после выбора машины"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="order-service">Услуга</label>
+                    <select id="order-service" name="service_id" required>
+                        <option value="">Выберите услугу</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="order-ready-date">Планируемая дата готовности</label>
+                    <input
+                        type="date"
+                        id="order-ready-date"
+                        name="ready_date"
+                        required
+                    >
+                </div>
+
+                <div class="popup-actions">
+                    <button type="submit">Создать заказ</button>
+                    <button type="button" class="cancel-create-order-btn">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </section>
 
 </section>

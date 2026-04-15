@@ -5,7 +5,9 @@ const menuItems = document.querySelectorAll(".menu-item");
 const profileName = document.querySelector(".top-panel .profile-name");
 
 let currentPageLoaded = "home";
+let currentUserProfile = null;
 let currentUserRole = "";
+
 
 async function getCurrentUser() {
     const response = await fetch("/api/profile/me");
@@ -79,6 +81,8 @@ async function initApp() {
     if (profileName) {
         profileName.textContent = profile.user.full_name;
     }
+
+    currentUserProfile = profile;
 
     await loadPage(page);
 }
@@ -173,11 +177,10 @@ async function ordersPageHandler() {
         tableBody.innerHTML = orders.map(order => `
             <tr>
                 <td>${order.order_number ?? "—"}</td>
-                <td data-role="master admin">${order.owner_full_name ?? "—"}</td>
+                <td data-role="master">${order.owner_full_name ?? "—"}</td>
                 <td>${order.car_plate_number ?? "—"}</td>
                 <td>${order.service_name ?? "—"}</td>
                 <td>${order.owner_phone ?? "—"}</td>
-                <td data-role="admin">${getEmployeesText(order.employees)}</td>
                 <td>${order.ready_date ?? "—"}</td>
             </tr>
         `).join("");
@@ -185,7 +188,7 @@ async function ordersPageHandler() {
         applyRoleVisibility(tableBody, currentUserRole);
     }
 
-    try {
+    async function refreshOrders() {
         const orders = await getOrders();
         console.log(orders);
 
@@ -193,12 +196,160 @@ async function ordersPageHandler() {
             renderTableMessage("Заказов пока нет");
             return;
         }
-
         renderOrders(orders, tableBody);
-    } catch (error) {
-        console.error(error);
-        renderTableMessage("Не удалось загрузить заказы");
     }
+        
+    await refreshOrders();
+    
+    if (currentUserRole !== "master") {
+        return;
+    }
+
+    const createOrderBtn = pageContent.querySelector(".create-order");
+    const ordersPopup = pageContent.querySelector(".popup-create-order");
+    const orderForm = pageContent.querySelector(".create-order-form");
+
+    if (!createOrderBtn || !ordersPopup || !orderForm) {
+        return;
+    }
+
+    const formMaster =  orderForm.querySelector("#order-master");
+    const formOrderCar = orderForm.querySelector("#order-car");
+    const formOrderOwner = orderForm.querySelector("#order-owner");
+    const formOrderService = orderForm.querySelector("#order-service");
+    const formOrderDate = orderForm.querySelector("#order-ready-date");
+
+    const formCloseBtn = orderForm.querySelector(".cancel-create-order-btn");
+
+    const masterUser = currentUserProfile.user;
+    const masterEmployee = currentUserProfile.employee;
+
+    const masterName = masterUser.full_name;
+    const masterId = masterEmployee.employee_id;
+
+    async function getFormData() {
+        const response = await fetch("/api/orders/form-data");
+
+        if(!response.ok){
+            return;
+        }
+
+        const result = await response.json();
+        return result.data;
+    }
+
+    const orderFormData = await getFormData();
+
+    function fillCarSelect(){
+        formOrderCar.innerHTML = "";
+    
+        const defaultOption = document.createElement("option");
+        defaultOption.value = "";
+        defaultOption.textContent = "Выберите авто";
+        formOrderCar.append(defaultOption);
+
+        for(const car of orderFormData.cars){
+            const option = document.createElement("option");
+            option.value = car.car_id;
+            option.textContent = car.label;
+            formOrderCar.append(option);
+        }
+    }
+
+    function fillServiceSelect(){
+        formOrderService.innerHTML = "";
+
+        const defaultOption = document.createElement("option");
+        defaultOption.value = "";
+        defaultOption.textContent = "Выберите услугу";
+        formOrderService.append(defaultOption);
+
+        for(const service of orderFormData.services){
+            const option = document.createElement("option");
+            option.value = service.service_id;
+            option.textContent = service.name;
+            formOrderService.append(option);
+        }
+    }
+
+    formOrderCar.addEventListener("change", () => {
+        const selectedCarId = +formOrderCar.value;
+        const selectedCar = orderFormData.cars.find(car => car.car_id === selectedCarId);
+
+        if (!selectedCar){
+            formOrderOwner.value = "";
+            return;
+        }
+        
+        formOrderOwner.value = selectedCar.owner_full_name;
+    });
+
+    createOrderBtn.addEventListener("click", event => {
+        event.preventDefault();
+
+        orderForm.reset();
+        formMaster.value = masterName;
+
+        formOrderOwner.value = "";
+        fillCarSelect();
+        fillServiceSelect();
+
+        ordersPopup.classList.remove("hidden");
+    });
+
+    formCloseBtn.addEventListener("click", () => {
+        ordersPopup.classList.add("hidden");
+    });
+
+    orderForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const formData = {
+            car_id: +formOrderCar.value,
+            service_id: +formOrderService.value,
+            ready_date: formOrderDate.value
+        };
+
+        try {
+            const createResponse = await fetch("/api/orders", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData)
+            });
+
+            if (!createResponse.ok) {
+                const errorData = await createResponse.json().catch(() => null);
+                console.error("Ошибка создания заказа:", errorData);
+                throw new Error("Ошибка при создании заказа");
+            }
+
+            const createdResult = await createResponse.json();
+            const createdOrder = createdResult.data;
+
+            const assignResponse = await fetch("/api/orders/assign-employees", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    order_number: createdOrder.order_number,
+                    employee_id: masterId
+                })
+            });
+
+            if (!assignResponse.ok) {
+                const errorData = await assignResponse.json().catch(() => null);
+                console.error("Ошибка привязки мастера:", errorData);
+                throw new Error("Заказ создан, но не удалось привязать мастера");
+            }
+
+            ordersPopup.classList.add("hidden");
+            await refreshOrders();
+            alert("Заказ успешно создан!");
+        } catch (error) {
+            console.error(error);
+            alert(error.message || "Не удалось сохранить заказ");
+        }
+    });
+
 }
 
 async function carsPageHandler () {
@@ -489,8 +640,6 @@ async function profilePageHandler() {
 
     if (profile.user.role === "master"){
         profileRole.textContent = "Мастер";
-    } else if (profile.user.role === "admin"){
-        profileRole.textContent = "Администратор";
     }
 
     profileEmail.textContent = profile.user.email;
