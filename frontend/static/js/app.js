@@ -129,7 +129,76 @@ async function initialization(currentPageLoaded) {
     }
 }
 
-function homePageHandler() {
+async function homePageHandler() {
+    const cards = pageContent.querySelectorAll(".mid-card");
+
+    if (cards.length < 4) {
+        return;
+    }
+
+    const ordersEl = cards[0].querySelector(".card-stat-text b");
+    const ownersEl = cards[1].querySelector(".card-stat-text b");
+    const carsEl = cards[2].querySelector(".card-stat-text b");
+    const storageEl = cards[3].querySelector(".card-stat-text b");
+
+    if (!ordersEl || !ownersEl || !carsEl || !storageEl) {
+        return;
+    }
+
+    try {
+        const [
+            ordersRes,
+            ownersRes,
+            carsRes,
+            repairPartsRes,
+            maintenancePartsRes
+        ] = await Promise.all([
+            fetch("/api/orders"),
+            fetch("/api/owners"),
+            fetch("/api/cars"),
+            fetch("/api/repair-parts"),
+            fetch("/api/maintenance-parts")
+        ]);
+
+        if (
+            !ordersRes.ok ||
+            !ownersRes.ok ||
+            !carsRes.ok ||
+            !repairPartsRes.ok ||
+            !maintenancePartsRes.ok
+        ) {
+            throw new Error("Ошибка загрузки статистики");
+        }
+
+        const ordersResult = await ordersRes.json();
+        const ownersResult = await ownersRes.json();
+        const carsResult = await carsRes.json();
+        const repairPartsResult = await repairPartsRes.json();
+        const maintenancePartsResult = await maintenancePartsRes.json();
+
+        const orders = ordersResult.data ?? [];
+        const owners = ownersResult.data ?? [];
+        const cars = carsResult.data ?? [];
+        const repairParts = repairPartsResult.data ?? [];
+        const maintenanceParts = maintenancePartsResult.data ?? [];
+
+        const ordersCount = orders.length;
+        const ownersCount = owners.length;
+        const carsCount = cars.length;
+        const storageCount = repairParts.length + maintenanceParts.length;
+
+        ordersEl.textContent = ordersCount;
+        ownersEl.textContent = ownersCount;
+        carsEl.textContent = carsCount;
+        storageEl.textContent = storageCount;
+    } catch (error) {
+        console.error("Ошибка загрузки главной страницы:", error);
+
+        ordersEl.textContent = "—";
+        ownersEl.textContent = "—";
+        carsEl.textContent = "—";
+        storageEl.textContent = "—";
+    }
 }
 
 async function ordersPageHandler() {
@@ -200,7 +269,7 @@ async function ordersPageHandler() {
     }
         
     await refreshOrders();
-    
+
     if (currentUserRole !== "master") {
         return;
     }
